@@ -1,0 +1,7 @@
+# Compiler speak.
+libvr4300.a
+*.o
+
+# Swap files.
+*.swp
+
