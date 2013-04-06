@@ -1,5 +1,5 @@
 /* ============================================================================
- *  CP1.h: VR4300 Coprocessor #1.
+ *  CP1.c: VR4300 Coprocessor #1.
  *
  *  VR4300SIM: NEC VR43xx Processor SIMulator.
  *  Copyright (C) 2013, Tyler J. Stachecki.
@@ -470,6 +470,27 @@ VR4300MULs(struct VR4300 *vr4300) {
   }
 
   fd->s.data[0] = value;
+}
+
+/* ============================================================================
+ *  Instruction: MFC1 (Move From Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned fs = GET_FS(rfexLatch->iw);
+  unsigned rt = GET_RT(rfexLatch->iw);
+
+  if (vr4300->cp0.regs.status.fr)
+    exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
+  else {
+    unsigned order = fs & 0x1;
+    exdcLatch->result.data = vr4300->cp1.regs[fs & 0x1E].w.data[order];
+  }
+
+  exdcLatch->result.dest = rt;
 }
 
 /* ============================================================================
