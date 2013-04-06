@@ -219,7 +219,7 @@ VR4300CTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 }
 
 /* ============================================================================
- *  Instruction: CVT.d.s: (Floating-Point Convert To Single Floating-Point).
+ *  Instruction: CVT.d.s: (Floating-Point Convert To Double Floating-Point).
  * ========================================================================= */
 static void
 VR4300CVTds(struct VR4300 *vr4300) {
@@ -234,6 +234,36 @@ VR4300CVTds(struct VR4300 *vr4300) {
 
   __asm__ volatile(
     "flds %1\n\t"
+    "fstpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->w.data[0])
+    : "st"
+  );
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->d.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: CVT.d.w: (Floating-Point Convert To Double Floating-Point).
+ * ========================================================================= */
+static void
+VR4300CVTdw(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  double value;
+
+  FPUClearExceptions();
+
+  __asm__ volatile(
+    "fildl %1\n\t"
     "fstpl %0\n\t"
     : "=m" (value)
     : "m" (fs->w.data[0])
@@ -798,7 +828,7 @@ static const FPUOperation fpuwFunctions[64] = {
   VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid,
   VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid,
   VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid,
-  VR4300CVTsw,       VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid,
+  VR4300CVTsw,       VR4300CVTdw,       VR4300FPUWInvalid, VR4300FPUWInvalid,
   VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid,
   VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid,
   VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid, VR4300FPUWInvalid,
