@@ -62,6 +62,37 @@ FPUUpdateState(struct VR4300CP1 *cp1) {
 }
 
 /* ============================================================================
+ *  Instruction: ABS.s (Floating-Point Absolute Value).
+ * ========================================================================= */
+static void
+VR4300ABSs(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  float value;
+
+  FPUClearExceptions();
+
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fabs\n\t"
+    "fstp %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->s.data[0] = value;
+}
+
+/* ============================================================================
  *  Instruction: ADD.d (Floating-Point Add).
  * ========================================================================= */
 static void
@@ -913,7 +944,7 @@ VR4300FPUSInvalid(struct VR4300 *unused(vr4300)) {
 static const FPUOperation fpusFunctions[64] = {
   VR4300ADDs,        VR4300SUBs,        VR4300MULs,        VR4300DIVs,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
-  VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
+  VR4300FPUSInvalid, VR4300ABSs,        VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300TRUNCws,     VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
