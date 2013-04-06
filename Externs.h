@@ -27,5 +27,7 @@ uint32_t BusReadWordUnaligned(const struct BusController *, uint32_t, size_t);
 void BusWriteWordUnaligned(const struct BusController *,
   uint32_t, uint32_t, size_t);
 
+const uint8_t *BusGetRDRAMPointer(struct BusController *);
+
 #endif
 
