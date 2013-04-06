@@ -377,6 +377,34 @@ VR4300DIVs(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: LDC1 (Load Doubleword To Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300LDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned ft = GET_FT(rfexLatch->iw);
+  int64_t imm = (int16_t) rfexLatch->iw;
+  uint64_t address = rs + imm;
+
+  if (address & 0x7)
+    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+
+  if (vr4300->cp0.regs.status.fr)
+    exdcLatch->memoryData.target = &vr4300->cp1.regs[ft].l.data;
+  else {
+    assert("VR4300LDC1: Don't support 32-bit fp registers.");
+    exdcLatch->memoryData.target = &vr4300->cp1.regs[ft & 0x1E].l.data;
+  }
+
+  exdcLatch->memoryData.address = address;
+  exdcLatch->memoryData.function = &VR4300LoadDWordFPU;
+
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+}
+
+/* ============================================================================
  *  Instruction: LWC1 (Load Word To Coprocessor 1)
  * ========================================================================= */
 void
@@ -509,6 +537,34 @@ VR4300MTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     unsigned order = rd & 0x1;
     vr4300->cp1.regs[rd & 0x1E].w.data[order] = rt;
   }
+
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+}
+
+/* ============================================================================
+ *  Instruction: SDC1 (Store Doubleword From Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300SDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned ft = GET_FT(rfexLatch->iw);
+  int64_t imm = (int16_t) rfexLatch->iw;
+  uint64_t address = rs + imm;
+
+  if (address & 0x7)
+    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+
+  if (vr4300->cp0.regs.status.fr)
+    exdcLatch->memoryData.data = vr4300->cp1.regs[ft].l.data;
+  else {
+    assert("VR4300SDC1: Don't support 32-bit fp registers.");
+    exdcLatch->memoryData.data = vr4300->cp1.regs[ft & 0x1E].l.data;
+  }
+
+  exdcLatch->memoryData.address = address;
+  exdcLatch->memoryData.function = &VR4300StoreDWord;
 
   memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }

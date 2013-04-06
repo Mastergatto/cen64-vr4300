@@ -176,6 +176,16 @@ VR4300LoadWord(const struct VR4300MemoryData *memoryData,
 }
 
 /* ============================================================================
+ *  VR4300LoadDWordFPU: Reads a word from the DCache/Bus.
+ * ========================================================================= */
+void
+VR4300LoadDWordFPU(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus) {
+  uint64_t *dest = (uint64_t*) memoryData->target;
+  *dest = BusReadDWord(bus, memoryData->address);
+}
+
+/* ============================================================================
  *  VR4300LoadWordFPU: Reads a word from the DCache/Bus.
  * ========================================================================= */
 void

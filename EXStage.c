@@ -926,15 +926,6 @@ VR4300LD(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 }
 
 /* ============================================================================
- *  Instruction: LDC1 (Load Doubleword To Coprocessor 1)
- * ========================================================================= */
-void
-VR4300LDC1(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: LDC1.");
-}
-
-/* ============================================================================
  *  Instruction: LDC2 (Load Doubleword To Coprocessor 2)
  * ========================================================================= */
 void
@@ -1344,15 +1335,6 @@ VR4300SD(struct VR4300 *vr4300,uint64_t rs, uint64_t rt) {
   exdcLatch->memoryData.data = rt;
 
   memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
-}
-
-/* ============================================================================
- *  Instruction: SDC1 (Store Doubleword From Coprocessor 1)
- * ========================================================================= */
-void
-VR4300SDC1(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: SDC1.");
 }
 
 /* ============================================================================
