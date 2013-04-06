@@ -761,6 +761,38 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: BC1 (Branch On Coprocessor 1 Instructions)
+ * ========================================================================= */
+void
+VR4300BC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
+  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
+  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+
+  /* Always invalidate outputs. */
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+
+  switch(rfexLatch->iw >> 16 & 0x3) {
+    case 0: assert(0 && "Unimplemented instruction: BC1F"); return;
+    case 1: assert(0 && "Unimplemented instruction: BC1T"); return;
+    case 2: assert(0 && "Unimplemented instruction: BC1FL"); return;
+
+    case 3: /* BC1TL */
+      if (cp1->control.coc == 0) {
+        icrfLatch->iwMask = 0;
+        return;
+      }
+
+      break;
+  }
+
+  icrfLatch->pc += address;
+}
+
+/* ============================================================================
  *  Instruction: FPU.d (Coprocessor 1 FPU.d Operation)
  * ========================================================================= */
 static void

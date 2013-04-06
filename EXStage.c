@@ -120,15 +120,6 @@ VR4300ANDI(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 }
 
 /* ============================================================================
- *  Instruction: BC1 (Branch On Coprocessor 1 Instructions)
- * ========================================================================= */
-void
-VR4300BC1(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: BC1.");
-}
-
-/* ============================================================================
  *  Instruction: BC2 (Branch On Coprocessor 2 Instructions)
  * ========================================================================= */
 void
