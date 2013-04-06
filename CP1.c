@@ -551,6 +551,22 @@ VR4300LWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 }
 
 /* ============================================================================
+ *  Instruction: MOV.s (Floating-Point Move).
+ * ========================================================================= */
+static void
+VR4300MOVs(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  float value;
+
+  value = fs->s.data[0];
+  fd->s.data[0] = value;
+}
+
+/* ============================================================================
  *  Instruction: MUL.d (Floating-Point Multiply).
  * ========================================================================= */
 static void
@@ -943,8 +959,8 @@ VR4300FPUSInvalid(struct VR4300 *unused(vr4300)) {
 
 static const FPUOperation fpusFunctions[64] = {
   VR4300ADDs,        VR4300SUBs,        VR4300MULs,        VR4300DIVs,
+  VR4300FPUSInvalid, VR4300ABSs,        VR4300MOVs,        VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
-  VR4300FPUSInvalid, VR4300ABSs,        VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300TRUNCws,     VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
