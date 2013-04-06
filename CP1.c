@@ -434,10 +434,21 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
   const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
   unsigned fd = GET_FD(rfexLatch->iw);
   uint32_t value;
+  int mode;
 
   FPUClearExceptions();
-  value = fs->s.data[0];
+  mode = fegetround();
+  fesetround(FE_TOWARDZERO);
 
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->l.data)
+    : "st"
+  );
+
+  fesetround(mode);
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
     return;
@@ -461,7 +472,7 @@ static const FPUOperation fpudFunctions[64] = {
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
-  VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
+  VR4300FPUDInvalid, VR4300TRUNCwd,     VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
