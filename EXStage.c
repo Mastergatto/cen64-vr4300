@@ -1583,15 +1583,6 @@ VR4300SW(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 /* ============================================================================
- *  Instruction: SWC1 (Store Word From Coprocessor 1)
- * ========================================================================= */
-void
-VR4300SWC1(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: SWC1.");
-}
-
-/* ============================================================================
  *  Instruction: SWC2 (Store Word From Coprocessor 2)
  * ========================================================================= */
 void

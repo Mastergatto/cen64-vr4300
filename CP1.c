@@ -772,6 +772,34 @@ VR4300SUBs(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: SWC1 (Store Word From Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300SWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned ft = GET_FT(rfexLatch->iw);
+  int64_t imm = (int16_t) rfexLatch->iw;
+  uint64_t address = rs + imm;
+
+  if (address & 0x7)
+    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+
+  if (vr4300->cp0.regs.status.fr)
+    exdcLatch->memoryData.data = vr4300->cp1.regs[ft].w.data[0];
+  else {
+    assert("VR4300SDC1: Don't support 32-bit fp registers.");
+    exdcLatch->memoryData.data = vr4300->cp1.regs[ft & 0x1E].l.data;
+  }
+
+  exdcLatch->memoryData.address = address;
+  exdcLatch->memoryData.function = &VR4300StoreWord;
+
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+}
+
+/* ============================================================================
  *  Instruction: TRUNC.w.d (Floating-Point Truncate To Single Fixed-Point)
  * ========================================================================= */
 static void
