@@ -723,6 +723,7 @@ VR4300SUBs(struct VR4300 *vr4300) {
 
   fd->s.data[0] = value;
 }
+
 /* ============================================================================
  *  Instruction: TRUNC.w.d (Floating-Point Truncate To Single Fixed-Point)
  * ========================================================================= */
@@ -745,6 +746,43 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
     "fistpl %0\n\t"
     : "=m" (value)
     : "m" (fs->l.data)
+    : "st"
+  );
+
+  fesetround(mode);
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  if (vr4300->cp0.regs.status.fr)
+    cp1->regs[fd].w.data[0] = value;
+  else
+    cp1->regs[fd & 0x1E].w.data[fd & 0x1] = value;
+}
+
+/* ============================================================================
+ *  Instruction: TRUNC.w.s (Floating-Point Truncate To Single Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300TRUNCws(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  unsigned fd = GET_FD(rfexLatch->iw);
+  uint32_t value;
+  int mode;
+
+  FPUClearExceptions();
+  mode = fegetround();
+  fesetround(FE_TOWARDZERO);
+
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
     : "st"
   );
 
@@ -876,7 +914,7 @@ static const FPUOperation fpusFunctions[64] = {
   VR4300ADDs,        VR4300SUBs,        VR4300MULs,        VR4300DIVs,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
-  VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
+  VR4300FPUSInvalid, VR4300TRUNCws,     VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
