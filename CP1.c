@@ -130,6 +130,33 @@ VR4300ADDs(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: C.le.s (Floating-Point Compare).
+ * ========================================================================= */
+static void
+VR4300Cles(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  const union VR4300CP1Register *ft = &cp1->regs[GET_FT(rfexLatch->iw)];
+  cp1->control.coc = 0;
+
+  __asm__ volatile(
+    "flds %1\n\t"
+    "flds %2\n\t"
+    "fucomip\n\t"
+    "setae %0\n\t"
+    "fstp %%st(0)\n\t"
+    : "=m" (cp1->control.coc)
+    : "m" (fs->s.data[0]),
+      "m" (ft->s.data[0])
+    : "st"
+    );
+
+  cp1->control.c = cp1->control.coc;
+}
+
+/* ============================================================================
  *  Instruction: CFC1 (Move Control From Coprocessor 1)
  * ========================================================================= */
 static int
@@ -799,7 +826,7 @@ static const FPUOperation fpusFunctions[64] = {
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
-  VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid
+  VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300Cles,        VR4300FPUSInvalid
 };
 
 void

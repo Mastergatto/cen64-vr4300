@@ -24,6 +24,7 @@ struct VR4300CP1Control {
   uint8_t rm;
   uint8_t rs;
   uint8_t c;
+  uint8_t coc;
 };
 
 union VR4300CP1Register {
