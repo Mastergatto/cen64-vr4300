@@ -1,9 +1,9 @@
 ==============================================================================
- VR4300IM: A MIPS (NEC) VR4300 simulator.
+ VR4300SIM: A MIPS (NEC) VR4300 simulator.
 ==============================================================================
 
-To my knowledge, this is not only the first-ever open-sourced implementation
-of a cycle- accurate model of the VR4300.
+To my knowledge, this is the first-ever open-sourced implementation of a
+cycle-accurate model of the VR4300.
 
 This simulator is a work in-progress. It has been designed such that it is
 completely self-standing, and only requires a C99/C++0x compiler. Support for
