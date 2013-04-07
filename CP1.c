@@ -914,7 +914,7 @@ VR4300FPUDInvalid(struct VR4300 *unused(vr4300)) {
 }
 
 static const FPUOperation fpudFunctions[64] = {
-  VR4300ADDd,        VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
+  VR4300ADDd,        VR4300SUBd,        VR4300MULd,        VR4300DIVd,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300TRUNCwd,     VR4300FPUDInvalid, VR4300FPUDInvalid,
@@ -950,7 +950,7 @@ VR4300FPULInvalid(struct VR4300 *unused(vr4300)) {
 }
 
 static const FPUOperation fpulFunctions[64] = {
-  VR4300ADDd,        VR4300SUBd,        VR4300MULd,        VR4300DIVd,
+  VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
