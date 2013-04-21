@@ -88,7 +88,6 @@ CycleVR4300(struct VR4300 *vr4300) {
   if (vr4300->pipeline.stalls > 0) {
     vr4300->pipeline.stalls--;
     IncrementCycleCounters(vr4300);
-    CheckForPendingInterrupts(vr4300);
     return;
   }
 
