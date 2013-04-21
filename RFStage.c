@@ -30,6 +30,7 @@ VR4300RFStage(struct VR4300 *vr4300) {
   uint32_t iw;
 
   /* Always update PC. */
+  rfexLatch->pc = icrfLatch->pc;
   icrfLatch->pc += 4;
 
   /* TODO: Giant hack: bypass the ICache for now. */

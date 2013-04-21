@@ -45,6 +45,7 @@ struct VR4300ICRFLatch {
 
 struct VR4300RFEXLatch {
   struct VR4300Opcode opcode;
+  uint64_t pc;
   uint32_t iw;
 };
 

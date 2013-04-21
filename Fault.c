@@ -60,8 +60,48 @@ VR4300FaultCP0I(struct VR4300 *unused(vr4300)) {
  *  VR4300FaultCPU: Coprocessor Unusable Exception.
  * ========================================================================= */
 void
-VR4300FaultCPU(struct VR4300 *unused(vr4300)) {
-  debug("Unimplemented fault: CPU.");
+VR4300FaultCPU(struct VR4300 *vr4300) {
+  struct VR4300PendingException *exception = &vr4300->pipeline.exception;
+  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
+  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
+    uint64_t epc;
+
+  debug("Handing fault: CPU.");
+
+  /* Trash all outputs of proceeding instructions. */
+  memset(&dcwbLatch->result, 0, sizeof(dcwbLatch->result));
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+  VR4300InvalidateOpcode(&rfexLatch->opcode);
+  icrfLatch->iwMask = 0;
+
+  /* Set the cause register accordingly. */
+  vr4300->cp0.regs.cause.ce = exception->causeData;
+  vr4300->cp0.regs.cause.excCode = 11;
+
+
+  if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
+    epc = exception->faultingPC - 4;
+    vr4300->cp0.regs.cause.bd = 1;
+  }
+
+  else {
+    epc = exception->faultingPC;
+    vr4300->cp0.regs.cause.bd = 0;
+  }
+
+  debugarg("Coprocessor unusable exception [0x%.16lX].", epc);
+  vr4300->cp0.regs.epc = epc;
+
+  /* Jump to exception vector. */
+  vr4300->cp0.regs.status.exl = 1;
+  vr4300->pipeline.icrfLatch.pc = (vr4300->cp0.regs.status.ds.bev == 1)
+    ? VR4300_GENERAL_BEV_VECTOR - 4
+    : VR4300_GENERAL_VECTOR - 4;
+
+  /* Stall for two cycles (already did one). */
+  vr4300->pipeline.stalls++;
 }
 
 /* ============================================================================
