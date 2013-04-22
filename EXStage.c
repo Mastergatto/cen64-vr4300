@@ -1238,7 +1238,7 @@ VR4300NOR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   unsigned dest = GET_RD(rfexLatch->iw);
 
-  exdcLatch->result.data = ~(rs ^ rt);
+  exdcLatch->result.data = ~(rs | rt);
   exdcLatch->result.dest = dest;
 }
 
