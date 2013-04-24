@@ -55,16 +55,15 @@ static const ShortPipelineFunction CycleVR4300Short[4] = {
  * ========================================================================= */
 static void
 CheckForPendingInterrupts(struct VR4300 *vr4300) {
-  struct VR4300PendingException *exception = &vr4300->pipeline.exception;
   uint32_t mask;
 
-  if (!vr4300->cp0.regs.status.ie ||
-    vr4300->cp0.regs.status.erl ||
-    vr4300->cp0.regs.status.exl)
-    return;
-
   if ((mask = vr4300->cp0.interrupts & vr4300->cp0.regs.status.im)) {
+    struct VR4300PendingException *exception = &vr4300->pipeline.exception;
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
+    const struct VR4300CP0Registers *cp0regs = &vr4300->cp0.regs;
+
+    if (cp0regs->status.ie == 0 || cp0regs->status.erl || cp0regs->status.exl)
+      return;
 
     /* Queue the exception up, prepare to kill stages. */
     vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_RF;
