@@ -42,7 +42,7 @@ VR4300RFStage(struct VR4300 *vr4300) {
   else
     iw = BusReadWord(vr4300->bus, address) & icrfLatch->iwMask;
 
-  iw &= icrfLatch->iwMask;
+  /* Reset the mask again. */
   icrfLatch->iwMask = ~0;
 
   /* Decode the instruction, save the results. */

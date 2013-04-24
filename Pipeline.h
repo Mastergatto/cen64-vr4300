@@ -60,8 +60,8 @@ struct VR4300DCWBLatch {
 };
 
 struct VR4300Pipeline {
-  unsigned long long cycles;
-  unsigned long long stalls;
+  unsigned cycles;
+  unsigned stalls;
 
   struct VR4300ICRFLatch icrfLatch;
   struct VR4300RFEXLatch rfexLatch;

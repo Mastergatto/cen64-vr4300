@@ -87,28 +87,26 @@ CycleVR4300(struct VR4300 *vr4300) {
   /* If we're stalling, then twiddle your fingers. */
   if (vr4300->pipeline.stalls > 0) {
     vr4300->pipeline.stalls--;
-    IncrementCycleCounters(vr4300);
-    return;
   }
 
   /* If any faults were raised, handle and bail. */
-  if (vr4300->pipeline.faultQueue.head != NULL) {
+  else if (vr4300->pipeline.faultQueue.head != NULL) {
     if (vr4300->pipeline.startStage < VR4300_PIPELINE_STAGE_WB) {
       CycleVR4300Short[vr4300->pipeline.startStage++](vr4300);
       return;
     }
 
     HandleFaults(vr4300);
-    IncrementCycleCounters(vr4300);
-    CheckForPendingInterrupts(vr4300);
     return;
   }
 
-  VR4300WBStage(dcwbLatch, vr4300->regs);
-  VR4300DCStage(vr4300);
-  VR4300EXStage(vr4300);
-  VR4300RFStage(vr4300);
-  VR4300ICStage(vr4300);
+  else {
+    VR4300WBStage(dcwbLatch, vr4300->regs);
+    VR4300DCStage(vr4300);
+    VR4300EXStage(vr4300);
+    VR4300RFStage(vr4300);
+    VR4300ICStage(vr4300);
+  }
 
   IncrementCycleCounters(vr4300);
   CheckForPendingInterrupts(vr4300);
