@@ -33,34 +33,31 @@ VR4300DCStage(struct VR4300 *vr4300) {
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
   struct VR4300MemoryData *memoryData = &exdcLatch->memoryData;
+  VR4300MemoryFunction function = memoryData->function;
+  uint64_t address = memoryData->address;
 
-  /* Do we need to load/store data? */
-  if (memoryData->function != NULL) {
-    const uint64_t *reg = &vr4300->regs[exdcLatch->result.dest];
-    uint64_t address = memoryData->address;
+  dcwbLatch->result = exdcLatch->result;
+  if (function == NULL)
+    return;
 
-    if (address < dcwbLatch->region->start
-      || address > dcwbLatch->region->end) {
-      const struct RegionInfo *region;
+  /* Reset before EXStage. */
+  memoryData->function = NULL;
 
-      if ((region = GetRegionInfo(vr4300, address)) == NULL) {
-        QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
-        return;
-      }
+  /* Check if the address lies in the cache region, or look it up. */
+  if (address < dcwbLatch->region->start || address > dcwbLatch->region->end) {
+    const struct RegionInfo *region;
 
-      dcwbLatch->region = region;
+    if ((region = GetRegionInfo(vr4300, address)) == NULL) {
+      QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+      memset(&dcwbLatch->result, 0, sizeof(dcwbLatch->result));
+      return;
     }
 
-    *(uint64_t*) memoryData->target = *reg;
-    memoryData->address -= dcwbLatch->region->offset;
-    memoryData->function(memoryData, vr4300->bus);
-
-    /* Reset before EXStage. */    
-    exdcLatch->memoryData.function = NULL;
+    dcwbLatch->region = region;
   }
 
-  /* Prepare to writeback the results. */
-  dcwbLatch->result = exdcLatch->result;
+  memoryData->address -= dcwbLatch->region->offset;
+  function(memoryData, vr4300->bus);
 }
 
 /* ============================================================================
