@@ -26,11 +26,11 @@
 /* ============================================================================
  *  VR4300/MIPS exception vectors.
  * ========================================================================= */
-#define VR4300_GENERAL_VECTOR 0xFFFFFFFF00000180ULL
+#define VR4300_GENERAL_VECTOR 0xFFFFFFFF80000180ULL
 #define VR4300_RESET_VECTOR 0xFFFFFFFFBFC00000ULL
 
 /* Only used when Status.{BEV} is set to 1. */
-#define VR4300_GENERAL_BEV_VECTOR 0xFFFFFFFFBFC00380ULL
+#define VR4300_GENERAL_BEV_VECTOR 0xFFFFFFFFBFC00200ULL
 
 /* ============================================================================
  *  VR4300FaultBRPT: Breakpoint Exception.
@@ -66,8 +66,6 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
-    uint64_t epc;
-
   debug("Handing fault: CPU.");
 
   /* Trash all outputs of proceeding instructions. */
@@ -80,19 +78,23 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
   vr4300->cp0.regs.cause.ce = exception->causeData;
   vr4300->cp0.regs.cause.excCode = 11;
 
+  /* If exl is not set, save the PC to EPC. */
+  if (vr4300->cp0.regs.status.exl == 0) {
+    uint64_t epc;
 
-  if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
-    epc = exception->faultingPC - 4;
-    vr4300->cp0.regs.cause.bd = 1;
+    if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
+      epc = exception->faultingPC - 4;
+      vr4300->cp0.regs.cause.bd = 1;
+    }
+
+    else {
+      epc = exception->faultingPC;
+      vr4300->cp0.regs.cause.bd = 0;
+   }
+
+    debugarg("Coprocessor unusable exception [0x%.16lX].", epc);
+    vr4300->cp0.regs.epc = epc;
   }
-
-  else {
-    epc = exception->faultingPC;
-    vr4300->cp0.regs.cause.bd = 0;
-  }
-
-  debugarg("Coprocessor unusable exception [0x%.16lX].", epc);
-  vr4300->cp0.regs.epc = epc;
 
   /* Jump to exception vector. */
   vr4300->cp0.regs.status.exl = 1;
@@ -202,7 +204,7 @@ VR4300FaultINTR(struct VR4300 *vr4300) {
   vr4300->cp0.regs.cause.excCode = 0;
 
   /* If exl is not set, save the PC to EPC. */
-  if (vr4300->cp0.regs.status.exl != 1) {
+  if (vr4300->cp0.regs.status.exl == 0) {
     uint64_t epc;
 
     if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
