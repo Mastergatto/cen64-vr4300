@@ -93,8 +93,8 @@ VR4300ERET(struct VR4300 *vr4300) {
   }
 
   vr4300->cp0.regs.llBit = 0;
-
   icrfLatch->iwMask = 0;
+
   memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 

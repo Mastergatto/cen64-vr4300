@@ -62,12 +62,12 @@ VR4300TLBR(struct VR4300 *unused(vr4300)) {
  * ========================================================================= */
 void
 VR4300TLBWI(struct VR4300 *vr4300) {
+#if 0
   struct EntryHi *entryHi = &vr4300->cp0.regs.entryHi;
   struct EntryLo *entryLo0 = &vr4300->cp0.regs.entryLo0;
   struct EntryLo *entryLo1 = &vr4300->cp0.regs.entryLo1;
   uint16_t pageMask = vr4300->cp0.regs.pageMask;
 
-#ifdef DEBUG
   debugarg("Mapping TLB Entry: %u", vr4300->cp0.regs.index.index);
   debugarg("ASID      : %u.", entryHi->asid);
 

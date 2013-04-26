@@ -68,7 +68,7 @@ FPUClearExceptions(void) {
  * ========================================================================= */
 static void
 FPURaiseException(struct VR4300 *unused(vr4300)) {
-  /*assert(0 && "Should raise FPU exception.");*/
+  assert(0 && "Should raise FPU exception.");
 }
 
 /* ============================================================================
