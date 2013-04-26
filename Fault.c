@@ -26,11 +26,11 @@
 /* ============================================================================
  *  VR4300/MIPS exception vectors.
  * ========================================================================= */
-#define VR4300_GENERAL_VECTOR 0xFFFFFFFF00000180ULL
+#define VR4300_GENERAL_VECTOR 0xFFFFFFFF80000180ULL
 #define VR4300_RESET_VECTOR 0xFFFFFFFFBFC00000ULL
 
 /* Only used when Status.{BEV} is set to 1. */
-#define VR4300_GENERAL_BEV_VECTOR 0xFFFFFFFFBFC00380ULL
+#define VR4300_GENERAL_BEV_VECTOR 0xFFFFFFFFBFC00200ULL
 
 /* ============================================================================
  *  VR4300FaultBRPT: Breakpoint Exception.
@@ -79,7 +79,7 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
   vr4300->cp0.regs.cause.excCode = 11;
 
   /* If exl is not set, save the PC to EPC. */
-  if (vr4300->cp0.regs.status.exl != 1) {
+  if (vr4300->cp0.regs.status.exl == 0) {
     uint64_t epc;
 
     if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
@@ -93,7 +93,6 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
     }
 
     debugarg("Coprocessor unusable exception [0x%.16lX].", epc);
-
     vr4300->cp0.regs.status.exl = 1;
     vr4300->cp0.regs.epc = epc;
   }
@@ -205,7 +204,7 @@ VR4300FaultINTR(struct VR4300 *vr4300) {
   vr4300->cp0.regs.cause.excCode = 0;
 
   /* If exl is not set, save the PC to EPC. */
-  if (vr4300->cp0.regs.status.exl != 1) {
+  if (vr4300->cp0.regs.status.exl == 0) {
     uint64_t epc;
 
     if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {

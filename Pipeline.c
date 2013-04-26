@@ -44,7 +44,7 @@ static void CycleVR4300_StartDC(struct VR4300 *vr4300);
 typedef void (*ShortPipelineFunction)(struct VR4300 *);
 
 static const ShortPipelineFunction CycleVR4300Short[4] = {
-  CycleVR4300,
+  NULL,
   CycleVR4300_StartRF,
   CycleVR4300_StartEX,
   CycleVR4300_StartDC
