@@ -36,9 +36,10 @@ VR4300DCStage(struct VR4300 *vr4300) {
   VR4300MemoryFunction function = memoryData->function;
   uint64_t address = memoryData->address;
 
-  dcwbLatch->result = exdcLatch->result;
-  if (function == NULL)
+  if (function == NULL) {
+    dcwbLatch->result = exdcLatch->result;
     return;
+  }
 
   /* Reset before EXStage. */
   memoryData->function = NULL;
@@ -58,6 +59,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
 
   memoryData->address -= dcwbLatch->region->offset;
   function(memoryData, vr4300->bus);
+  dcwbLatch->result = exdcLatch->result;
 }
 
 /* ============================================================================

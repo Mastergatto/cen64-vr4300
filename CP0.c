@@ -13,8 +13,10 @@
 #include "CPU.h"
 
 #ifdef __cplusplus
+#include <cassert>
 #include <cstring>
 #else
+#include <assert.h>
 #include <string.h>
 #endif
 
@@ -78,7 +80,6 @@ VR4300DMTC0(struct VR4300 *unused(vr4300),
 void
 VR4300ERET(struct VR4300 *vr4300) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
 
   if (vr4300->cp0.regs.status.erl) {
     debugarg("ERET: Returning to [0x%.16lX].", vr4300->cp0.regs.errorEPC);
@@ -94,8 +95,6 @@ VR4300ERET(struct VR4300 *vr4300) {
 
   vr4300->cp0.regs.llBit = 0;
   icrfLatch->iwMask = 0;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -123,6 +122,7 @@ void
 VR4300MFC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
   unsigned rd = rfexLatch->iw >> 11 & 0x1F;
   unsigned dest = GET_RT(rfexLatch->iw);
   uint64_t result;
@@ -268,6 +268,7 @@ VR4300MTC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
   case VR4300_CP0_REGISTER_CAUSE:
     vr4300->cp0.regs.cause.ip |= rt >> 8 & 0x3;
+    assert(vr4300->cp0.regs.cause.ip == 0);
 
     vr4300->cp0.interrupts &= ~0x03;
     vr4300->cp0.interrupts |= rt >> 8 & 0x3;
@@ -321,6 +322,5 @@ void
 VR4300InitCP0(struct VR4300CP0 *cp0) {
   debug("Initializing CP0.");
   memset(cp0, 0, sizeof(*cp0));
-
 }
 

@@ -70,7 +70,7 @@ struct VR4300Pipeline {
   struct VR4300FaultQueue faultQueue;
 
   struct VR4300PendingException exception;
-  enum VR4300PipelineStage startStage;
+  unsigned startStage;
 };
 
 struct VR4300;

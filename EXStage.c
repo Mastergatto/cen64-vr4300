@@ -135,11 +135,7 @@ void
 VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (rs != rt)
     return;
@@ -154,11 +150,7 @@ void
 VR4300BEQL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (rs != rt) {
     icrfLatch->iwMask = 0;
@@ -175,11 +167,7 @@ void
 VR4300BGEZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs < 0)
     return;
@@ -222,11 +210,7 @@ void
 VR4300BGEZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs < 0) {
     icrfLatch->iwMask = 0;
@@ -243,11 +227,7 @@ void
 VR4300BGTZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs <= 0)
     return;
@@ -262,11 +242,7 @@ void
 VR4300BGTZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs <= 0) {
     icrfLatch->iwMask = 0;
@@ -283,11 +259,7 @@ void
 VR4300BLEZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs > 0)
     return;
@@ -302,11 +274,7 @@ void
 VR4300BLEZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs > 0) {
     icrfLatch->iwMask = 0;
@@ -323,11 +291,7 @@ void
 VR4300BLTZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs >= 0)
     return;
@@ -360,11 +324,7 @@ void
 VR4300BLTZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if ((int64_t) rs >= 0) {
     icrfLatch->iwMask = 0;
@@ -381,11 +341,7 @@ void
 VR4300BNE(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (rs == rt)
     return;
@@ -400,11 +356,7 @@ void
 VR4300BNEL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (rs == rt) {
     icrfLatch->iwMask = 0;
@@ -427,10 +379,8 @@ VR4300BREAK(struct VR4300 *unused(vr4300),
  *  Instruction: CACHE (Cache Operation)
  * ========================================================================= */
 void
-VR4300CACHE(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
-
+VR4300CACHE(struct VR4300 *unused(vr4300),
+  uint64_t unused(rs), uint64_t unused(rt)) {
   /*debug("Unimplemented function: CACHE.");*/
 }
 
@@ -522,7 +472,6 @@ VR4300DDIV(struct VR4300 *unused(vr4300),
  * ========================================================================= */
 void
 VR4300DDIVU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   assert(rt != 0 && "VR4300DDIVU: Quotient is zero?");
 
   if (likely(rt != 0)) {
@@ -532,8 +481,6 @@ VR4300DDIVU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
     vr4300->regs[VR4300_REGISTER_LO] = div;
     vr4300->regs[VR4300_REGISTER_HI] = mod;
   }
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -541,7 +488,6 @@ VR4300DDIVU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
  * ========================================================================= */
 void
 VR4300DIV(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   assert(_rt != 0 && "VR4300DIV: Quotient is zero?");
 
   if (likely(_rt != 0)) {
@@ -554,8 +500,6 @@ VR4300DIV(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
     vr4300->regs[VR4300_REGISTER_LO] = div;
     vr4300->regs[VR4300_REGISTER_HI] = mod;
   }
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -563,7 +507,6 @@ VR4300DIV(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
  * ========================================================================= */
 void
 VR4300DIVU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   assert(_rt != 0 && "VR4300DIV: Quotient is zero?");
 
   if (likely(_rt != 0)) {
@@ -576,8 +519,6 @@ VR4300DIVU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
     vr4300->regs[VR4300_REGISTER_LO] = div;
     vr4300->regs[VR4300_REGISTER_HI] = mod;
   }
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -631,7 +572,6 @@ VR4300DMULT(struct VR4300 *unused(vr4300),
  * ========================================================================= */
 void
 VR4300DMULTU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   uint64_t lo, hi;
 
 #ifdef __GNUC__
@@ -650,8 +590,6 @@ VR4300DMULTU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
 
   vr4300->regs[VR4300_REGISTER_LO] = lo;
   vr4300->regs[VR4300_REGISTER_HI] = hi;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -792,9 +730,8 @@ VR4300DSUBU(struct VR4300 *unused(vr4300),
  *  Instruction: INV (Invalid Operation)
  * ========================================================================= */
 void
-VR4300INV(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+VR4300INV(struct VR4300 *unused(vr4300),
+  uint64_t unused(rs), uint64_t unused(rt)) {
 }
 
 /* ============================================================================
@@ -804,10 +741,7 @@ void
 VR4300J(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   uint64_t address = (rfexLatch->iw & 0x3FFFFFF) << 2;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   icrfLatch->pc &= 0xFFFFFFFFF0000000ULL;
   icrfLatch->pc = (icrfLatch->pc | address) - 4;
@@ -851,11 +785,7 @@ VR4300JALR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 void
 VR4300JR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
   icrfLatch->pc = rs - 4;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -865,7 +795,6 @@ void
 VR4300LB(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -873,7 +802,7 @@ VR4300LB(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadByte;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -885,7 +814,6 @@ void
 VR4300LBU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -893,7 +821,7 @@ VR4300LBU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadByteU;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -905,7 +833,6 @@ void
 VR4300LD(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -916,7 +843,7 @@ VR4300LD(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadDWord;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -937,7 +864,6 @@ void
 VR4300LDL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -945,7 +871,7 @@ VR4300LDL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadDWordLeft;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -957,7 +883,6 @@ void
 VR4300LDR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -965,7 +890,7 @@ VR4300LDR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadDWordRight;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -977,7 +902,6 @@ void
 VR4300LH(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -988,7 +912,7 @@ VR4300LH(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadHWord;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -1000,7 +924,6 @@ void
 VR4300LHU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -1011,7 +934,7 @@ VR4300LHU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadHWordU;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -1056,7 +979,6 @@ void
 VR4300LW(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -1067,7 +989,7 @@ VR4300LW(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWord;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -1088,7 +1010,6 @@ void
 VR4300LWL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -1096,7 +1017,7 @@ VR4300LWL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWordLeft;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -1108,7 +1029,6 @@ void
 VR4300LWR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -1116,7 +1036,7 @@ VR4300LWR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWordRight;
-  exdcLatch->memoryData.target = &dcwbLatch->result.data;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
 
   exdcLatch->result.dest = dest;
 }
@@ -1181,10 +1101,7 @@ VR4300MTC2(struct VR4300 *unused(vr4300),
  * ========================================================================= */
 void
 VR4300MTHI(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   vr4300->regs[VR4300_REGISTER_HI] = rs;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1192,10 +1109,7 @@ VR4300MTHI(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
  * ========================================================================= */
 void
 VR4300MTLO(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   vr4300->regs[VR4300_REGISTER_LO] = rs;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1204,8 +1118,6 @@ VR4300MTLO(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
  * ========================================================================= */
 void
 VR4300MULT(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
   int64_t rs = (int32_t) _rs;
   int64_t rt = (int32_t) _rt;
   int64_t result = rs * rt;
@@ -1215,8 +1127,6 @@ VR4300MULT(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
 
   vr4300->regs[VR4300_REGISTER_LO] = (int64_t) lo;
   vr4300->regs[VR4300_REGISTER_HI] = (int64_t) hi;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1225,8 +1135,6 @@ VR4300MULT(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
  * ========================================================================= */
 void
 VR4300MULTU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
   uint64_t rs = (uint32_t) _rs;
   uint64_t rt = (uint32_t) _rt;
   uint64_t result = rs * rt;
@@ -1236,8 +1144,6 @@ VR4300MULTU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
 
   vr4300->regs[VR4300_REGISTER_LO] = (int64_t) lo;
   vr4300->regs[VR4300_REGISTER_HI] = (int64_t) hi;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1297,8 +1203,6 @@ VR4300SB(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreByte;
   exdcLatch->memoryData.data = rt;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1336,8 +1240,6 @@ VR4300SD(struct VR4300 *vr4300,uint64_t rs, uint64_t rt) {
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreDWord;
   exdcLatch->memoryData.data = rt;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1384,8 +1286,6 @@ VR4300SH(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreHWord;
   exdcLatch->memoryData.data = rt;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1590,8 +1490,6 @@ VR4300SW(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreWord;
   exdcLatch->memoryData.data = rt;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1617,8 +1515,6 @@ VR4300SWL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreWordLeft;
   exdcLatch->memoryData.data = rt;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1635,8 +1531,6 @@ VR4300SWR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreWordRight;
   exdcLatch->memoryData.data = rt;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 }
 
 /* ============================================================================
@@ -1801,9 +1695,13 @@ void
 VR4300EXStage(struct VR4300 *vr4300) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   const struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   unsigned rsForwardingRegister = GET_RS(rfexLatch->iw);
   unsigned rtForwardingRegister = GET_RT(rfexLatch->iw);
   uint64_t rs, rt;
+
+  /* Always invalidate outputs for safety. */
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   /* Forward results and invoke the appropriate function. */
   rs = (dcwbLatch->result.dest != rsForwardingRegister)

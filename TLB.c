@@ -61,7 +61,7 @@ VR4300TLBR(struct VR4300 *unused(vr4300)) {
  *  Instruction: TLBWI (Write Indexed TLB Entry)
  * ========================================================================= */
 void
-VR4300TLBWI(struct VR4300 *vr4300) {
+VR4300TLBWI(struct VR4300 *unused(vr4300)) {
 #if 0
   struct EntryHi *entryHi = &vr4300->cp0.regs.entryHi;
   struct EntryLo *entryLo0 = &vr4300->cp0.regs.entryLo0;

@@ -271,10 +271,8 @@ VR4300CFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
 
   assert ((rd == 0 || rd == 31) && "Tried to read reserved CP1 register.");
 
-  if (!FPUCheckUsable(vr4300)) {
-    memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+  if (!FPUCheckUsable(vr4300)) 
     return;
-  }
 
   result = control->rm;
   result |= CFC1NativeToSimulated(control->nativeFlags) << 2;
@@ -311,13 +309,11 @@ CTC1SimulatedToNative(int excepts) {
 void
 VR4300CTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300CP1Control *control = &vr4300->cp1.control;
   unsigned rd = GET_RD(rfexLatch->iw);
 
   /* Always invalidate outputs. */
   assert(rd == 31 && "Tried to modify reserved CP1 register.");
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -564,9 +560,6 @@ VR4300LDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
-
   if (!FPUCheckUsable(vr4300))
     return;
 
@@ -595,9 +588,6 @@ VR4300LWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   unsigned rt = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -711,10 +701,8 @@ VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   unsigned fs = GET_FS(rfexLatch->iw);
   unsigned rt = GET_RT(rfexLatch->iw);
 
-  if (!FPUCheckUsable(vr4300)) {
-    memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+  if (!FPUCheckUsable(vr4300))
     return;
-  }
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
@@ -732,12 +720,7 @@ VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
 void
 VR4300MTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
   unsigned rd = GET_RD(rfexLatch->iw);
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -761,8 +744,6 @@ VR4300SDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   unsigned ft = GET_FT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -860,8 +841,6 @@ VR4300SWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   unsigned ft = GET_FT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
-
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -961,13 +940,9 @@ void
 VR4300BC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300CP1 *cp1 = &vr4300->cp1;
 
   int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
-
-  /* Always invalidate outputs. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -1035,8 +1010,6 @@ static const FPUOperation fpudFunctions[64] = {
 void
 VR4300FPUD(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -1074,8 +1047,6 @@ static const FPUOperation fpulFunctions[64] = {
 void
 VR4300FPUL(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -1113,8 +1084,6 @@ static const FPUOperation fpusFunctions[64] = {
 void
 VR4300FPUS(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -1152,8 +1121,6 @@ static const FPUOperation fpuwFunctions[64] = {
 void
 VR4300FPUW(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
 
   if (!FPUCheckUsable(vr4300))
     return;
