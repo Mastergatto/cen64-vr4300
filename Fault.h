@@ -27,6 +27,7 @@ struct VR4300FaultManager {
   uint32_t faultCauseData;
 
   enum VR4300PipelineFault fault;
+  int killStage;
 };
 
 #ifndef NDEBUG
@@ -38,7 +39,11 @@ void InitFaultManager(struct VR4300FaultManager *manager);
 void HandleFaults(struct VR4300 *vr4300);
 void QueueFault(struct VR4300FaultManager *manager,
   enum VR4300PipelineFault fault, uint64_t faultingPC,
-  uint32_t nextOpcodeFlags, uint32_t faultCauseData);
+  uint32_t nextOpcodeFlags, uint32_t faultCauseData,
+  unsigned killStage);
+
+void PerformHardReset(struct VR4300FaultManager *manager);
+void PerformSoftReset(struct VR4300FaultManager *manager);
 
 #endif
 

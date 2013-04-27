@@ -62,8 +62,6 @@ struct VR4300Pipeline {
   struct VR4300EXDCLatch exdcLatch;
   struct VR4300DCWBLatch dcwbLatch;
   struct VR4300FaultManager faultManager;
-
-  unsigned startStage;
 };
 
 struct VR4300;

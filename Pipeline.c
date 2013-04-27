@@ -37,7 +37,12 @@ static void IncrementCycleCounters(struct VR4300 *);
 /* ============================================================================
  *  Pipeline exceptions that require us to kill instructions are uncommon.
  *  Therefore, to prevent littering the pipeline with conditionals, we simply
- *  have a separate pipeline stages to take care of things for us.
+ *  use functions that only execute specific pipeline stages and invoke them
+ *  as necessary.
+ *
+ *  The last "stage" will actually invoke a fault handler, instead of cycling
+ *  the pipeline. The stages spend handing the fault count towards the delay
+ *  cycles.
  * ========================================================================= */
 static void CycleVR4300_StartRF(struct VR4300 *vr4300);
 static void CycleVR4300_StartEX(struct VR4300 *vr4300);
@@ -59,14 +64,14 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
   if (!vr4300->cp0.canRaiseInterrupt)
     return;
 
+  /* There are are interrupts pending, and the mask matches... */
   if (vr4300->cp0.regs.cause.ip & vr4300->cp0.regs.status.im) {
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
 
     /* Queue the exception up, prepare to kill stages. */
     QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR,
-      vr4300->pipeline.icrfLatch.pc, opcode->flags, 0);
-
-    vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_IC;
+      vr4300->pipeline.icrfLatch.pc, opcode->flags, 0 /* No Data */,
+      VR4300_PIPELINE_STAGE_IC);
   }
 }
 
@@ -82,8 +87,8 @@ CycleVR4300(struct VR4300 *vr4300) {
     vr4300->pipeline.stalls--;
 
   /* If any faults were raised, handle and bail. */
-  else if (vr4300->pipeline.startStage < NUM_VR4300_PIPELINE_STAGES)
-    CycleVR4300Short[vr4300->pipeline.startStage++](vr4300);
+  else if (vr4300->pipeline.faultManager.killStage >= 0)
+    CycleVR4300Short[vr4300->pipeline.faultManager.killStage++](vr4300);
 
   else {
     VR4300WBStage(dcwbLatch, vr4300->regs);
@@ -93,6 +98,7 @@ CycleVR4300(struct VR4300 *vr4300) {
     VR4300ICStage(vr4300);
 
     /* Only check on a full cycle. */
+    /* TODO: What about end of stalls? */
     CheckForPendingInterrupts(vr4300);
   }
 
@@ -139,7 +145,7 @@ CycleVR4300_StartDC(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
- *  Bump counters and whatnot before we leave.
+ *  Bump counters, check for timer interrupts, etc. before we leave.
  * ========================================================================= */
 static void
 IncrementCycleCounters(struct VR4300 *vr4300) {
@@ -158,11 +164,10 @@ void
 VR4300InitPipeline(struct VR4300Pipeline *pipeline) {
   memset(pipeline, 0, sizeof(*pipeline));
 
-  InitFaultManager(&pipeline->faultManager);
-  QueueFault(&pipeline->faultManager, VR4300_FAULT_RST, 0, 0, 0);
-  pipeline->startStage = VR4300_PIPELINE_STAGE_IC;
-
+  /* Validate the cached regions. */
   pipeline->icrfLatch.region = GetDefaultRegion();
   pipeline->dcwbLatch.region = GetDefaultRegion();
+
+  InitFaultManager(&pipeline->faultManager);
 }
 

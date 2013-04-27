@@ -84,7 +84,21 @@ CommonExceptionHandler(struct VR4300CP0 *cp0, uint64_t *pc,
  * ========================================================================= */
 void
 InitFaultManager(struct VR4300FaultManager *manager) {
-  manager->fault = VR4300_FAULT_INV;
+  PerformHardReset(manager);
+}
+
+/* ===========================================================================
+ *  PerformHardReset: Queues up a hard reset exception.
+ * ========================================================================= */
+void PerformHardReset(struct VR4300FaultManager *manager) {
+  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 0, VR4300_PIPELINE_STAGE_IC);
+}
+
+/* ===========================================================================
+ *  PerformSoftReset: Queues up a soft reset exception.
+ * ========================================================================= */
+void PerformSoftReset(struct VR4300FaultManager *manager) {
+  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 1, VR4300_PIPELINE_STAGE_IC);
 }
 
 /* ===========================================================================
@@ -92,14 +106,22 @@ InitFaultManager(struct VR4300FaultManager *manager) {
  * ========================================================================= */
 void
 QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
-  uint64_t faultingPC, uint32_t nextOpcodeFlags, uint32_t faultCauseData) {
-  assert(fault >= manager->fault && "Tried to queue a fault in wrong order.");
+  uint64_t faultingPC, uint32_t nextOpcodeFlags, uint32_t faultCauseData,
+  enum VR4300PipelineStage killStage) {
   debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
+
+  assert(manager->killStage >= stage && "Tried to kill stages in wrong order.");
+  assert(killStage < VR4300_PIPELINE_STAGE_WB && "Invalid killStage.");
+
+  /* Higher priority ready? */
+  if (fault < manager->fault)
+    return;
 
   manager->faultingPC = faultingPC;
   manager->nextOpcodeFlags = nextOpcodeFlags;
   manager->faultCauseData = faultCauseData;
 
+  manager->killStage = killStage;
   manager->fault = fault;
 }
 
@@ -290,7 +312,7 @@ VR4300FaultRST(struct VR4300 *vr4300) {
   debug("Handling fault: RST");
 
   /* RST/SOFT */
-  if (vr4300->pipeline.cycles > 5) {
+  if (vr4300->pipeline.faultManager.faultCauseData) {
     debug("Unimplemented fault: RST/Soft.");
   }
 
@@ -380,7 +402,7 @@ HandleFaults(struct VR4300 *vr4300) {
   FaultHandlerTable[manager->fault](vr4300);
 
   /* Reset the pipeline (to effectively flush it). */
-  vr4300->pipeline.startStage = NUM_VR4300_PIPELINE_STAGES;
   manager->fault = VR4300_FAULT_INV;
+  manager->killStage = -1;
 }
 
