@@ -50,7 +50,7 @@ FPUCheckUsable(struct VR4300 *vr4300) {
   /* Initialize the exception data for the interrupt. */
   exception->faultingPC = vr4300->pipeline.rfexLatch.pc;
   exception->nextOpcodeFlags = opcode->flags;
-  exception->causeData = 1; /* CP1 */
+  vr4300->cp0.regs.cause.ce = 1;
 
   return 0;
 }

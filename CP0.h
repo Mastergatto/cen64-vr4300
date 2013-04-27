@@ -198,7 +198,6 @@ struct VR4300CP0Registers {
 struct VR4300CP0 {
   struct VR4300CP0Registers regs;
   uint8_t canRaiseInterrupt;
-  uint8_t interrupts;
 };
 
 void VR4300InitCP0(struct VR4300CP0 *);

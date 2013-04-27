@@ -57,9 +57,9 @@ const char *MIRegisterMnemonics[NUM_MI_REGISTERS] = {
 static void
 CheckForRCPInterrupts(struct VR4300 *vr4300) {
   if (vr4300->miregs[MI_INTR_REG] & vr4300->miregs[MI_INTR_MASK_REG])
-    vr4300->cp0.interrupts |= 0x04;
+    vr4300->cp0.regs.cause.ip |= 0x04;
   else
-    vr4300->cp0.interrupts &= ~0x04;
+    vr4300->cp0.regs.cause.ip &= ~0x04;
 }
 
 /* ============================================================================

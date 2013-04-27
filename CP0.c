@@ -247,7 +247,7 @@ VR4300MTC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     break;
 
   case VR4300_CP0_REGISTER_COMPARE:
-    vr4300->cp0.interrupts &= ~0x80;
+    vr4300->cp0.regs.cause.ip &= ~0x80;
     vr4300->cp0.regs.compare = rt;
     break;
 
@@ -280,11 +280,9 @@ VR4300MTC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     break;
 
   case VR4300_CP0_REGISTER_CAUSE:
+    vr4300->cp0.regs.cause.ip &= ~0x03;
     vr4300->cp0.regs.cause.ip |= rt >> 8 & 0x3;
-    assert(vr4300->cp0.regs.cause.ip == 0);
-
-    vr4300->cp0.interrupts &= ~0x03;
-    vr4300->cp0.interrupts |= rt >> 8 & 0x3;
+    assert((vr4300->cp0.regs.cause.ip & 0x3) == 0);
     break;
 
   case VR4300_CP0_REGISTER_EPC:

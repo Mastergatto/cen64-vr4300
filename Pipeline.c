@@ -47,7 +47,7 @@ static const ShortPipelineFunction CycleVR4300Short[4] = {
   NULL,
   CycleVR4300_StartRF,
   CycleVR4300_StartEX,
-  CycleVR4300_StartDC
+  CycleVR4300_StartDC,
 };
 
 /* ============================================================================
@@ -55,13 +55,10 @@ static const ShortPipelineFunction CycleVR4300Short[4] = {
  * ========================================================================= */
 static void
 CheckForPendingInterrupts(struct VR4300 *vr4300) {
-  uint32_t mask;
-
-  /* Don't bother if they're disabled. */
   if (!vr4300->cp0.canRaiseInterrupt)
     return;
 
-  if ((mask = vr4300->cp0.interrupts & vr4300->cp0.regs.status.im)) {
+  if (vr4300->cp0.regs.cause.ip & vr4300->cp0.regs.status.im) {
     struct VR4300PendingException *exception = &vr4300->pipeline.exception;
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
 
@@ -72,7 +69,6 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
     /* Initialize the exception data for the interrupt. */
     exception->faultingPC = vr4300->pipeline.icrfLatch.pc;
     exception->nextOpcodeFlags = opcode->flags;
-    exception->causeData = mask;
   }
 }
 
@@ -84,9 +80,8 @@ CycleVR4300(struct VR4300 *vr4300) {
   struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   /* If we're stalling, then twiddle your fingers. */
-  if (vr4300->pipeline.stalls > 0) {
+  if (vr4300->pipeline.stalls > 0)
     vr4300->pipeline.stalls--;
-  }
 
   /* If any faults were raised, handle and bail. */
   else if (vr4300->pipeline.faultQueue.head != NULL) {
@@ -169,7 +164,7 @@ IncrementCycleCounters(struct VR4300 *vr4300) {
   /* Increment the count register; timer interrupt unlikely. */
   vr4300->cp0.regs.count += (vr4300->pipeline.cycles & 0x01);
   if (unlikely(vr4300->cp0.regs.count == vr4300->cp0.regs.compare))
-    vr4300->cp0.interrupts |= 0x80;
+    vr4300->cp0.regs.cause.ip |= 0x80;
 }
 
 /* ============================================================================

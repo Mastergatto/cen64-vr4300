@@ -75,7 +75,6 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
   icrfLatch->iwMask = 0;
 
   /* Set the cause register accordingly. */
-  vr4300->cp0.regs.cause.ce = exception->causeData;
   vr4300->cp0.regs.cause.excCode = 11;
 
   /* If exl is not set, save the PC to EPC. */
@@ -203,7 +202,6 @@ VR4300FaultINTR(struct VR4300 *vr4300) {
   icrfLatch->iwMask = 0;
 
   /* Set the cause register accordingly. */
-  vr4300->cp0.regs.cause.ip = exception->causeData;
   vr4300->cp0.regs.cause.excCode = 0;
 
   /* If exl is not set, save the PC to EPC. */

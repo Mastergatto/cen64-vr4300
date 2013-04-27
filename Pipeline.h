@@ -28,7 +28,6 @@ enum VR4300PipelineStage {
 struct VR4300PendingException {
   uint64_t faultingPC;
   uint32_t nextOpcodeFlags;
-  uint32_t causeData;
 };
 
 struct VR4300Result {
