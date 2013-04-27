@@ -12,8 +12,6 @@
 #define __VR4300__FAULT_H__
 #include "Common.h"
 
-#define NUM_FAULT_QUEUE_NODES 5
-
 enum VR4300PipelineFault {
 #define X(fault) VR4300_FAULT_##fault,
 #include "Fault.md"
@@ -22,8 +20,6 @@ enum VR4300PipelineFault {
 };
 
 struct VR4300;
-
-typedef void (*const FaultHandler)(struct VR4300 *);
 
 struct VR4300FaultManager {
   uint64_t faultingPC;
@@ -37,10 +33,12 @@ struct VR4300FaultManager {
 extern const char *VR4300FaultMnemonics[NUM_VR4300_FAULTS];
 #endif
 
-void HandleFaults(struct VR4300 *);
-void InitFaultManager(struct VR4300FaultManager *);
-void QueueFault(struct VR4300FaultManager *, enum VR4300PipelineFault,
-  uint64_t, uint32_t, uint32_t);
+void InitFaultManager(struct VR4300FaultManager *manager);
+
+void HandleFaults(struct VR4300 *vr4300);
+void QueueFault(struct VR4300FaultManager *manager,
+  enum VR4300PipelineFault fault, uint64_t faultingPC,
+  uint32_t nextOpcodeFlags, uint32_t faultCauseData);
 
 #endif
 

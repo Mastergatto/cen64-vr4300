@@ -11,9 +11,10 @@
 #ifndef __VR4300__DCSTAGE_H__
 #define __VR4300__DCSTAGE_H__
 #include "Common.h"
-#include "CPU.h"
 
+struct BusController;
 struct VR4300MemoryData;
+
 typedef void (*VR4300MemoryFunction)(const struct VR4300MemoryData *,
   struct BusController *);
 

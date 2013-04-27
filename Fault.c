@@ -79,6 +79,30 @@ CommonExceptionHandler(struct VR4300CP0 *cp0, uint64_t *pc,
     : VR4300_GENERAL_VECTOR - 4;
 }
 
+/* ===========================================================================
+ *  InitFaultManager: Initializes the fault manager.
+ * ========================================================================= */
+void
+InitFaultManager(struct VR4300FaultManager *manager) {
+  manager->fault = VR4300_FAULT_INV;
+}
+
+/* ===========================================================================
+ *  QueueFault: Queues up a pipeline fault notice in a prioritized fashion.
+ * ========================================================================= */
+void
+QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
+  uint64_t faultingPC, uint32_t nextOpcodeFlags, uint32_t faultCauseData) {
+  assert(fault >= manager->fault && "Tried to queue a fault in wrong order.");
+  debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
+
+  manager->faultingPC = faultingPC;
+  manager->nextOpcodeFlags = nextOpcodeFlags;
+  manager->faultCauseData = faultCauseData;
+
+  manager->fault = fault;
+}
+
 /* ============================================================================
  *  VR4300FaultBRPT: Breakpoint Exception.
  * ========================================================================= */
@@ -330,6 +354,8 @@ VR4300FaultWAT(struct VR4300 *unused(vr4300)) {
  *   Interlocks: Resolve by stalling the pipeline until hardware corrects.
  *   Exceptions: Resolve by aborting both the faulty and subsequent insns.
  * ========================================================================= */
+typedef void (*const FaultHandler)(struct VR4300 *);
+
 static const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS] = {
 #define X(fault) &VR4300Fault##fault,
 #include "Fault.md"
@@ -356,29 +382,5 @@ HandleFaults(struct VR4300 *vr4300) {
   /* Reset the pipeline (to effectively flush it). */
   vr4300->pipeline.startStage = NUM_VR4300_PIPELINE_STAGES;
   manager->fault = VR4300_FAULT_INV;
-}
-
-/* ===========================================================================
- *  InitFaultManager: Initializes the fault manager.
- * ========================================================================= */
-void
-InitFaultManager(struct VR4300FaultManager *manager) {
-  manager->fault = VR4300_FAULT_INV;
-}
-
-/* ===========================================================================
- *  QueueFault: Queues up a pipeline fault notice in a prioritized fashion.
- * ========================================================================= */
-void
-QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
-  uint64_t faultingPC, uint32_t nextOpcodeFlags, uint32_t faultCauseData) {
-  assert(fault >= manager->fault && "Tried to queue a fault in wrong order.");
-  debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
-
-  manager->faultingPC = faultingPC;
-  manager->nextOpcodeFlags = nextOpcodeFlags;
-  manager->faultCauseData = faultCauseData;
-
-  manager->fault = fault;
 }
 

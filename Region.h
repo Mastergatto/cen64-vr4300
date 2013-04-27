@@ -11,8 +11,8 @@
 #ifndef __VR4300__REGION_H__
 #define __VR4300__REGION_H__
 #include "Common.h"
-#include "CPU.h"
 
+struct VR4300;
 struct RegionInfo {
   uint64_t offset;
   uint64_t start;
