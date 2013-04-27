@@ -93,6 +93,12 @@ VR4300ERET(struct VR4300 *vr4300) {
     vr4300->cp0.regs.status.exl = 0;
   }
 
+  /* Flatten branches in main loop. */
+  vr4300->cp0.canRaiseInterrupt =
+    vr4300->cp0.regs.status.ie &&
+    !vr4300->cp0.regs.status.exl &&
+    !vr4300->cp0.regs.status.erl;
+
   vr4300->cp0.regs.llBit = 0;
   icrfLatch->iwMask = 0;
 }
@@ -264,6 +270,13 @@ VR4300MTC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     vr4300->cp0.regs.status.fr = rt >> 26 & 0x1;
     vr4300->cp0.regs.status.rp = rt >> 27 & 0x1;
     vr4300->cp0.regs.status.cu = rt >> 28 & 0xF;
+
+    /* Flatten branches in main loop. */
+    vr4300->cp0.canRaiseInterrupt =
+      vr4300->cp0.regs.status.ie &&
+      !vr4300->cp0.regs.status.exl &&
+      !vr4300->cp0.regs.status.erl;
+
     break;
 
   case VR4300_CP0_REGISTER_CAUSE:

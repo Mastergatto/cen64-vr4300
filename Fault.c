@@ -93,9 +93,12 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
     }
 
     debugarg("Coprocessor unusable exception [0x%.16lX].", epc);
-    vr4300->cp0.regs.status.exl = 1;
     vr4300->cp0.regs.epc = epc;
   }
+
+  /* status.exl should now be 1! */
+  vr4300->cp0.canRaiseInterrupt = 0;
+  vr4300->cp0.regs.status.exl = 1;
 
   /* Jump to exception vector. */
   vr4300->pipeline.icrfLatch.pc = (vr4300->cp0.regs.status.ds.bev == 1)
@@ -222,6 +225,10 @@ VR4300FaultINTR(struct VR4300 *vr4300) {
     vr4300->cp0.regs.status.exl = 1;
     vr4300->cp0.regs.epc = epc;
   }
+
+  /* status.exl should now be 1! */
+  vr4300->cp0.canRaiseInterrupt = 0;
+  vr4300->cp0.regs.status.exl = 1;
 
   /* Jump to exception vector. */
   vr4300->pipeline.icrfLatch.pc = (vr4300->cp0.regs.status.ds.bev == 1)
