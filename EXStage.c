@@ -839,7 +839,7 @@ VR4300LD(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   uint64_t address = rs + imm;
 
   if (address & 0x7)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadDWord;
@@ -908,7 +908,7 @@ VR4300LH(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   uint64_t address = rs + imm;
 
   if (address & 0x1)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadHWord;
@@ -930,7 +930,7 @@ VR4300LHU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   uint64_t address = rs + imm;
 
   if (address & 0x1)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadHWordU;
@@ -985,7 +985,7 @@ VR4300LW(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   uint64_t address = rs + imm;
 
   if (address & 0x3)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWord;
@@ -1235,7 +1235,7 @@ VR4300SD(struct VR4300 *vr4300,uint64_t rs, uint64_t rt) {
   uint64_t address = rs + imm;
 
   if (address & 0x7)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreDWord;
@@ -1281,7 +1281,7 @@ VR4300SH(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint64_t address = rs + imm;
 
   if (address & 0x1)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreHWord;
@@ -1485,7 +1485,7 @@ VR4300SW(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint64_t address = rs + imm;
 
   if (address & 0x3)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreWord;

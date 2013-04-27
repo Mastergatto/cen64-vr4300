@@ -61,7 +61,7 @@ VR4300FaultCP0I(struct VR4300 *unused(vr4300)) {
  * ========================================================================= */
 void
 VR4300FaultCPU(struct VR4300 *vr4300) {
-  struct VR4300PendingException *exception = &vr4300->pipeline.exception;
+  struct VR4300FaultManager *faultManager = &vr4300->pipeline.faultManager;
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
@@ -81,13 +81,13 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
   if (vr4300->cp0.regs.status.exl == 0) {
     uint64_t epc;
 
-    if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
-      epc = exception->faultingPC - 4;
+    if (faultManager->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
+      epc = faultManager->faultingPC - 4;
       vr4300->cp0.regs.cause.bd = 1;
     }
 
     else {
-      epc = exception->faultingPC;
+      epc = faultManager->faultingPC;
       vr4300->cp0.regs.cause.bd = 0;
     }
 
@@ -188,7 +188,7 @@ VR4300FaultICB(struct VR4300 *unused(vr4300)) {
  * ========================================================================= */
 void
 VR4300FaultINTR(struct VR4300 *vr4300) {
-  struct VR4300PendingException *exception = &vr4300->pipeline.exception;
+  struct VR4300FaultManager *faultManager = &vr4300->pipeline.faultManager;
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
@@ -208,13 +208,13 @@ VR4300FaultINTR(struct VR4300 *vr4300) {
   if (vr4300->cp0.regs.status.exl == 0) {
     uint64_t epc;
 
-    if (exception->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
-      epc = exception->faultingPC - 4;
+    if (faultManager->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
+      epc = faultManager->faultingPC - 4;
       vr4300->cp0.regs.cause.bd = 1;
     }
 
     else {
-      epc = exception->faultingPC;
+      epc = faultManager->faultingPC;
       vr4300->cp0.regs.cause.bd = 0;
     }
 
@@ -386,71 +386,25 @@ const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS] = {
  * ========================================================================= */
 void
 HandleFaults(struct VR4300 *vr4300) {
-  struct VR4300FaultQueueNode *oldNode = vr4300->pipeline.faultQueue.head;
-  enum VR4300PipelineFault faultType = oldNode->faultType;
   vr4300->pipeline.startStage = NUM_VR4300_PIPELINE_STAGES;
 
-  assert(vr4300->pipeline.faultQueue.head != NULL &&
-    "Called HandleFaults when pipeline fault queue is empty.");
-
-  /* Remove the fault with the greatest priority from the queue. */
-  vr4300->pipeline.faultQueue.head = oldNode->next;
-  oldNode->next = vr4300->pipeline.faultQueue.freeHead;
-  vr4300->pipeline.faultQueue.freeHead = oldNode;
-
   /* Resolve the fault appropriately. */
-  FaultHandlerTable[faultType](vr4300);
+  FaultHandlerTable[vr4300->pipeline.faultManager.fault](vr4300);
 }
 
 /* ===========================================================================
- *  InitFaultQueue: Initializes the fault queue.
+ *  InitFaultManager: Initializes the fault manager.
  * ========================================================================= */
 void
-InitFaultQueue(struct VR4300FaultQueue *faultQueue) {
-  struct VR4300FaultQueueNode *queueNode = &faultQueue->nodes[0];
-  unsigned i;
-
-  faultQueue->head = NULL;
-  faultQueue->freeHead = queueNode;
-  faultQueue->nodes[NUM_FAULT_QUEUE_NODES - 1].next = NULL;
-
-  for (i = 0; i < NUM_FAULT_QUEUE_NODES - 1; i++) {
-    queueNode->next = &faultQueue->nodes[i + 1];
-    queueNode = queueNode->next;
-  }
+InitFaultManager(struct VR4300FaultManager *manager) {
+  manager->fault = 0;
 }
 
 /* ===========================================================================
  *  QueueFault: Queues up a pipeline fault notice in a prioritized fashion.
  * ========================================================================= */
 void
-QueueFault(struct VR4300FaultQueue *queue, enum VR4300PipelineFault fault) {
-  struct VR4300FaultQueueNode *freeHead = queue->freeHead;
-  struct VR4300FaultQueueNode *queueNode = queue->head;
-
-  /* This is a hack! */
-  if (queue->head != NULL)
-    return;
-
-  assert (queue->freeHead != NULL &&
-    "Called QueueFault when pipeline fault queue is full.");
-
-  /* Allocate and initialize an entry. */
-  queue->freeHead = freeHead->next;
-  freeHead->faultType = fault;
-
-  /* Insert at the head if we're the highest priority. */
-  if (!queueNode || queueNode->faultType > fault) {
-    queue->head = freeHead;
-    queue->head->next = queueNode;
-    return;
-  }
-
-  /* We aren't the highest priority; scan the list. */
-  while (queueNode->next && queueNode->faultType < fault)
-    queueNode = queueNode->next;
-
-  freeHead->next = queueNode->next;
-  queueNode->next = freeHead;
+QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault) {
+  manager->fault = fault;
 }
 

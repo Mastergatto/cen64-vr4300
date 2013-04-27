@@ -33,7 +33,7 @@ VR4300ICStage(struct VR4300 *vr4300) {
     const struct RegionInfo *region;
 
     if ((region = GetRegionInfo(vr4300, pc)) == NULL) {
-      QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_IADE);
+      QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_IADE);
       return;
     }
 

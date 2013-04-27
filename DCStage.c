@@ -49,7 +49,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
     const struct RegionInfo *region;
 
     if ((region = GetRegionInfo(vr4300, address)) == NULL) {
-      QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+      QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
       memset(&dcwbLatch->result, 0, sizeof(dcwbLatch->result));
       return;
     }

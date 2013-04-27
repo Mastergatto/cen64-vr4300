@@ -26,14 +26,10 @@ struct VR4300Pipeline;
 
 typedef void (*const FaultHandler)(struct VR4300 *);
 
-struct VR4300FaultQueueNode {
-  struct VR4300FaultQueueNode *next;
-  enum VR4300PipelineFault faultType;
-};
-
-struct VR4300FaultQueue {
-  struct VR4300FaultQueueNode nodes[NUM_FAULT_QUEUE_NODES];
-  struct VR4300FaultQueueNode *head, *freeHead;
+struct VR4300FaultManager {
+  uint64_t faultingPC;
+  uint32_t nextOpcodeFlags;
+  enum VR4300PipelineFault fault;
 };
 
 #ifndef NDEBUG
@@ -44,8 +40,8 @@ extern const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS];
 
 
 void HandleFaults(struct VR4300 *);
-void InitFaultQueue(struct VR4300FaultQueue *);
-void QueueFault(struct VR4300FaultQueue *, enum VR4300PipelineFault);
+void InitFaultManager(struct VR4300FaultManager *);
+void QueueFault(struct VR4300FaultManager *, enum VR4300PipelineFault);
 
 #endif
 

@@ -37,19 +37,19 @@ typedef void (*FPUOperation)(struct VR4300 *);
  * ========================================================================= */
 static int
 FPUCheckUsable(struct VR4300 *vr4300) {
-  struct VR4300PendingException *exception = &vr4300->pipeline.exception;
   const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
+  struct VR4300FaultManager *faultManager = &vr4300->pipeline.faultManager;
 
   if (likely(vr4300->cp0.regs.status.cu & 0x2))
     return 1;
 
   /* Queue the exception up, prepare to kill stages. */
-  QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_CPU);
+  QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_CPU);
   vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_EX;
 
   /* Initialize the exception data for the interrupt. */
-  exception->faultingPC = vr4300->pipeline.rfexLatch.pc;
-  exception->nextOpcodeFlags = opcode->flags;
+  faultManager->faultingPC = vr4300->pipeline.rfexLatch.pc;
+  faultManager->nextOpcodeFlags = opcode->flags;
   vr4300->cp0.regs.cause.ce = 1;
 
   return 0;
@@ -564,7 +564,7 @@ VR4300LDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     return;
 
   if (address & 0x7)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.target = &vr4300->cp1.regs[ft].l.data;
@@ -593,7 +593,7 @@ VR4300LWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     return;
 
   if (address & 0x3)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.target = &vr4300->cp1.regs[rt].w.data[0];
@@ -749,7 +749,7 @@ VR4300SDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     return;
 
   if (address & 0x7)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.data = vr4300->cp1.regs[ft].l.data;
@@ -846,7 +846,7 @@ VR4300SWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     return;
 
   if (address & 0x7)
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_DADE);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_DADE);
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.data = vr4300->cp1.regs[ft].w.data[0];

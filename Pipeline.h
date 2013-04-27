@@ -25,11 +25,6 @@ enum VR4300PipelineStage {
   NUM_VR4300_PIPELINE_STAGES
 };
 
-struct VR4300PendingException {
-  uint64_t faultingPC;
-  uint32_t nextOpcodeFlags;
-};
-
 struct VR4300Result {
   uint64_t data, dest;
 };
@@ -66,9 +61,8 @@ struct VR4300Pipeline {
   struct VR4300RFEXLatch rfexLatch;
   struct VR4300EXDCLatch exdcLatch;
   struct VR4300DCWBLatch dcwbLatch;
-  struct VR4300FaultQueue faultQueue;
+  struct VR4300FaultManager faultManager;
 
-  struct VR4300PendingException exception;
   unsigned startStage;
 };
 

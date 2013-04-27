@@ -60,16 +60,16 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
     return;
 
   if (vr4300->cp0.regs.cause.ip & vr4300->cp0.regs.status.im) {
-    struct VR4300PendingException *exception = &vr4300->pipeline.exception;
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
+    struct VR4300FaultManager *faultManager = &vr4300->pipeline.faultManager;
 
     /* Queue the exception up, prepare to kill stages. */
-    QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_INTR);
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR);
     vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_IC;
 
     /* Initialize the exception data for the interrupt. */
-    exception->faultingPC = vr4300->pipeline.icrfLatch.pc;
-    exception->nextOpcodeFlags = opcode->flags;
+    faultManager->faultingPC = vr4300->pipeline.icrfLatch.pc;
+    faultManager->nextOpcodeFlags = opcode->flags;
   }
 }
 
@@ -85,10 +85,8 @@ CycleVR4300(struct VR4300 *vr4300) {
     vr4300->pipeline.stalls--;
 
   /* If any faults were raised, handle and bail. */
-  else if (vr4300->pipeline.startStage < NUM_VR4300_PIPELINE_STAGES) {
-    assert(vr4300->pipeline.faultQueue.head != NULL);
+  else if (vr4300->pipeline.startStage < NUM_VR4300_PIPELINE_STAGES)
     CycleVR4300Short[vr4300->pipeline.startStage++](vr4300);
-  }
 
   else {
     VR4300WBStage(dcwbLatch, vr4300->regs);
@@ -163,8 +161,8 @@ void
 VR4300InitPipeline(struct VR4300Pipeline *pipeline) {
   memset(pipeline, 0, sizeof(*pipeline));
 
-  InitFaultQueue(&pipeline->faultQueue);
-  QueueFault(&pipeline->faultQueue, VR4300_FAULT_RST);
+  InitFaultManager(&pipeline->faultManager);
+  QueueFault(&pipeline->faultManager, VR4300_FAULT_RST);
   pipeline->startStage = VR4300_PIPELINE_STAGE_IC;
 
   pipeline->icrfLatch.region = GetDefaultRegion();
