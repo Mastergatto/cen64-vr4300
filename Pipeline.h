@@ -26,7 +26,8 @@ enum VR4300PipelineStage {
 };
 
 struct VR4300Result {
-  uint64_t data, dest;
+  uint64_t data;
+  unsigned dest;
 };
 
 struct VR4300ICRFLatch {

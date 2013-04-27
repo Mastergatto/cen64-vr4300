@@ -16,11 +16,9 @@
 #include "Region.h"
 
 #ifdef __cplusplus
-#include <cassert>
 #include <cstddef>
 #include <cstring>
 #else
-#include <assert.h>
 #include <stddef.h>
 #include <string.h>
 #endif
@@ -33,31 +31,34 @@ VR4300DCStage(struct VR4300 *vr4300) {
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
   struct VR4300MemoryData *memoryData = &exdcLatch->memoryData;
-  VR4300MemoryFunction function = memoryData->function;
-  uint64_t address = memoryData->address;
+  VR4300MemoryFunction function;
 
-  if (function == NULL) {
+  if (memoryData->function == NULL) {
     dcwbLatch->result = exdcLatch->result;
     return;
   }
 
   /* Reset before EXStage. */
+  function = memoryData->function;
   memoryData->function = NULL;
 
-  /* Check if the address lies in the cache region, or look it up. */
-  if (address < dcwbLatch->region->start || address > dcwbLatch->region->end) {
+  /* Lookup the region that our address lies in. */
+  if (memoryData->address < dcwbLatch->region->start ||
+    memoryData->address > dcwbLatch->region->end) {
     const struct RegionInfo *region;
 
-    if ((region = GetRegionInfo(vr4300, address)) == NULL) {
-      debug("Unimplemented fault: VR4300_FAULT_DADE.");
+    if ((region = GetRegionInfo(vr4300, memoryData->address)) == NULL) {
       memset(&dcwbLatch->result, 0, sizeof(dcwbLatch->result));
+      debug("Unimplemented fault: VR4300_FAULT_DADE.");
       return;
     }
 
     dcwbLatch->region = region;
   }
 
+  /* TODO: Bypass the write buffers. */
   memoryData->address -= dcwbLatch->region->offset;
+
   function(memoryData, vr4300->bus);
   dcwbLatch->result = exdcLatch->result;
 }

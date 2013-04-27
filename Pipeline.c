@@ -20,14 +20,8 @@
 #include "WBStage.h"
 
 #ifdef __cplusplus
-#include <cassert>
-#include <cstddef>
-#include <cstdio>
 #include <cstring>
 #else
-#include <assert.h>
-#include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 #endif
 

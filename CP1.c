@@ -568,6 +568,7 @@ VR4300LDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadDWordFPU;
+  exdcLatch->result.dest = 0;
 }
 
 /* ============================================================================
@@ -594,6 +595,7 @@ VR4300LWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWordFPU;
+  exdcLatch->result.dest = 0;
 }
 
 /* ============================================================================
