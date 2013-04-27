@@ -22,13 +22,14 @@ enum VR4300PipelineFault {
 };
 
 struct VR4300;
-struct VR4300Pipeline;
 
 typedef void (*const FaultHandler)(struct VR4300 *);
 
 struct VR4300FaultManager {
   uint64_t faultingPC;
   uint32_t nextOpcodeFlags;
+  uint32_t faultCauseData;
+
   enum VR4300PipelineFault fault;
 };
 
@@ -41,7 +42,8 @@ extern const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS];
 
 void HandleFaults(struct VR4300 *);
 void InitFaultManager(struct VR4300FaultManager *);
-void QueueFault(struct VR4300FaultManager *, enum VR4300PipelineFault);
+void QueueFault(struct VR4300FaultManager *, enum VR4300PipelineFault,
+  uint64_t, uint32_t, uint32_t);
 
 #endif
 

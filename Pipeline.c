@@ -61,15 +61,12 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
 
   if (vr4300->cp0.regs.cause.ip & vr4300->cp0.regs.status.im) {
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
-    struct VR4300FaultManager *faultManager = &vr4300->pipeline.faultManager;
 
     /* Queue the exception up, prepare to kill stages. */
-    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR);
-    vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_IC;
+    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR,
+      vr4300->pipeline.icrfLatch.pc, opcode->flags, 0);
 
-    /* Initialize the exception data for the interrupt. */
-    faultManager->faultingPC = vr4300->pipeline.icrfLatch.pc;
-    faultManager->nextOpcodeFlags = opcode->flags;
+    vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_IC;
   }
 }
 
@@ -162,7 +159,7 @@ VR4300InitPipeline(struct VR4300Pipeline *pipeline) {
   memset(pipeline, 0, sizeof(*pipeline));
 
   InitFaultManager(&pipeline->faultManager);
-  QueueFault(&pipeline->faultManager, VR4300_FAULT_RST);
+  QueueFault(&pipeline->faultManager, VR4300_FAULT_RST, 0, 0, 0);
   pipeline->startStage = VR4300_PIPELINE_STAGE_IC;
 
   pipeline->icrfLatch.region = GetDefaultRegion();
