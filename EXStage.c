@@ -427,8 +427,10 @@ VR4300BREAK(struct VR4300 *unused(vr4300),
  *  Instruction: CACHE (Cache Operation)
  * ========================================================================= */
 void
-VR4300CACHE(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
+VR4300CACHE(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+
   /*debug("Unimplemented function: CACHE.");*/
 }
 
