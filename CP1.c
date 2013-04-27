@@ -44,8 +44,8 @@ FPUCheckUsable(struct VR4300 *vr4300) {
     return 1;
 
   /* Queue the exception up, prepare to kill stages. */
-  vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_DC;
   QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_CPU);
+  vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_EX;
 
   /* Initialize the exception data for the interrupt. */
   exception->faultingPC = vr4300->pipeline.rfexLatch.pc;

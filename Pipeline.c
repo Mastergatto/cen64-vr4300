@@ -31,6 +31,7 @@
 #include <string.h>
 #endif
 
+static void CheckForPendingInterrupts(struct VR4300 *vr4300);
 static void IncrementCycleCounters(struct VR4300 *);
 
 /* ============================================================================
@@ -44,10 +45,10 @@ static void CycleVR4300_StartDC(struct VR4300 *vr4300);
 typedef void (*ShortPipelineFunction)(struct VR4300 *);
 
 static const ShortPipelineFunction CycleVR4300Short[4] = {
-  NULL,
   CycleVR4300_StartRF,
   CycleVR4300_StartEX,
   CycleVR4300_StartDC,
+  HandleFaults
 };
 
 /* ============================================================================
@@ -63,8 +64,8 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
 
     /* Queue the exception up, prepare to kill stages. */
-    vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_RF;
     QueueFault(&vr4300->pipeline.faultQueue, VR4300_FAULT_INTR);
+    vr4300->pipeline.startStage = VR4300_PIPELINE_STAGE_IC;
 
     /* Initialize the exception data for the interrupt. */
     exception->faultingPC = vr4300->pipeline.icrfLatch.pc;
@@ -84,14 +85,9 @@ CycleVR4300(struct VR4300 *vr4300) {
     vr4300->pipeline.stalls--;
 
   /* If any faults were raised, handle and bail. */
-  else if (vr4300->pipeline.faultQueue.head != NULL) {
-    if (vr4300->pipeline.startStage < VR4300_PIPELINE_STAGE_WB) {
-      CycleVR4300Short[vr4300->pipeline.startStage++](vr4300);
-      return;
-    }
-
-    HandleFaults(vr4300);
-    return;
+  else if (vr4300->pipeline.startStage < NUM_VR4300_PIPELINE_STAGES) {
+    assert(vr4300->pipeline.faultQueue.head != NULL);
+    CycleVR4300Short[vr4300->pipeline.startStage++](vr4300);
   }
 
   else {
@@ -100,10 +96,12 @@ CycleVR4300(struct VR4300 *vr4300) {
     VR4300EXStage(vr4300);
     VR4300RFStage(vr4300);
     VR4300ICStage(vr4300);
+
+    /* Only check on a full cycle. */
+    CheckForPendingInterrupts(vr4300);
   }
 
   IncrementCycleCounters(vr4300);
-  CheckForPendingInterrupts(vr4300);
 }
 
 /* ============================================================================
@@ -118,9 +116,6 @@ CycleVR4300_StartRF(struct VR4300 *vr4300) {
   VR4300DCStage(vr4300);
   VR4300EXStage(vr4300);
   VR4300RFStage(vr4300);
-
-  /* Faulting PC just came out of RF. */
-  IncrementCycleCounters(vr4300);
 }
 
 /* ============================================================================
@@ -134,9 +129,6 @@ CycleVR4300_StartEX(struct VR4300 *vr4300) {
   VR4300WBStage(dcwbLatch, vr4300->regs);
   VR4300DCStage(vr4300);
   VR4300EXStage(vr4300);
-
-  /* Faulting PC just came out of EX. */
-  IncrementCycleCounters(vr4300);
 }
 
 /* ============================================================================
@@ -149,9 +141,6 @@ CycleVR4300_StartDC(struct VR4300 *vr4300) {
 
   VR4300WBStage(dcwbLatch, vr4300->regs);
   VR4300DCStage(vr4300);
-
-  /* Faulting PC just came out of DC. */
-  IncrementCycleCounters(vr4300);
 }
 
 /* ============================================================================
@@ -176,7 +165,7 @@ VR4300InitPipeline(struct VR4300Pipeline *pipeline) {
 
   InitFaultQueue(&pipeline->faultQueue);
   QueueFault(&pipeline->faultQueue, VR4300_FAULT_RST);
-  pipeline->startStage = NUM_VR4300_PIPELINE_STAGES;
+  pipeline->startStage = VR4300_PIPELINE_STAGE_IC;
 
   pipeline->icrfLatch.region = GetDefaultRegion();
   pipeline->dcwbLatch.region = GetDefaultRegion();

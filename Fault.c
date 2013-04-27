@@ -388,6 +388,7 @@ void
 HandleFaults(struct VR4300 *vr4300) {
   struct VR4300FaultQueueNode *oldNode = vr4300->pipeline.faultQueue.head;
   enum VR4300PipelineFault faultType = oldNode->faultType;
+  vr4300->pipeline.startStage = NUM_VR4300_PIPELINE_STAGES;
 
   assert(vr4300->pipeline.faultQueue.head != NULL &&
     "Called HandleFaults when pipeline fault queue is empty.");
@@ -427,6 +428,10 @@ QueueFault(struct VR4300FaultQueue *queue, enum VR4300PipelineFault fault) {
   struct VR4300FaultQueueNode *freeHead = queue->freeHead;
   struct VR4300FaultQueueNode *queueNode = queue->head;
 
+  /* This is a hack! */
+  if (queue->head != NULL)
+    return;
+
   assert (queue->freeHead != NULL &&
     "Called QueueFault when pipeline fault queue is full.");
 
@@ -447,6 +452,5 @@ QueueFault(struct VR4300FaultQueue *queue, enum VR4300PipelineFault fault) {
 
   freeHead->next = queueNode->next;
   queueNode->next = freeHead;
-
 }
 
