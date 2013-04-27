@@ -37,9 +37,6 @@ struct VR4300FaultManager {
 extern const char *VR4300FaultMnemonics[NUM_VR4300_FAULTS];
 #endif
 
-extern const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS];
-
-
 void HandleFaults(struct VR4300 *);
 void InitFaultManager(struct VR4300FaultManager *);
 void QueueFault(struct VR4300FaultManager *, enum VR4300PipelineFault,

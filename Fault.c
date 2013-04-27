@@ -22,15 +22,62 @@
 #include <string.h>
 #endif
 
+static void CommonExceptionHandler(struct VR4300CP0 *,
+  uint64_t *, uint64_t, unsigned, uint32_t);
 
 /* ============================================================================
  *  VR4300/MIPS exception vectors.
  * ========================================================================= */
-#define VR4300_GENERAL_VECTOR 0xFFFFFFFF80000180ULL
-#define VR4300_RESET_VECTOR 0xFFFFFFFFBFC00000ULL
-
-/* Only used when Status.{BEV} is set to 1. */
 #define VR4300_GENERAL_BEV_VECTOR 0xFFFFFFFFBFC00200ULL
+#define VR4300_GENERAL_VECTOR     0xFFFFFFFF80000180ULL
+#define VR4300_RESET_VECTOR       0xFFFFFFFFBFC00000ULL
+
+/* ============================================================================
+ *  Mnemonic and callback tables.
+ * ========================================================================= */
+#ifndef NDEBUG
+const char *VR4300FaultMnemonics[NUM_VR4300_FAULTS] = {
+#define X(fault) #fault,
+#include "Fault.md"
+#undef X
+};
+#endif
+
+/* ============================================================================
+ *  Common exception handler for all but Cold/Soft/NMI and TLB/XTLB.
+ * ========================================================================= */
+static void
+CommonExceptionHandler(struct VR4300CP0 *cp0, uint64_t *pc,
+  uint64_t faultingPC, unsigned exeCode, uint32_t opcodeFlags) {
+  cp0->regs.cause.excCode = exeCode;
+
+  /* Setup the cause register. */
+  if (cp0->regs.status.exl == 0) {
+    uint64_t epc;
+
+    if (opcodeFlags & OPCODE_INFO_BRANCH) {
+      epc = faultingPC - 4;
+      cp0->regs.cause.bd = 1;
+    }
+
+    else {
+      epc = faultingPC;
+      cp0->regs.cause.bd = 0;
+    }
+
+    cp0->regs.epc = epc;
+  }
+
+  /* Disable interrupts. */
+  /* Switch to kernel mode. */
+  cp0->canRaiseInterrupt = 0;
+  cp0->regs.status.exl = 1;
+
+  /* Jump to the exception vector. */
+  *pc = (cp0->regs.status.ds.bev)
+    ? VR4300_GENERAL_BEV_VECTOR - 4
+    : VR4300_GENERAL_VECTOR - 4;
+}
 
 /* ============================================================================
  *  VR4300FaultBRPT: Breakpoint Exception.
@@ -62,43 +109,14 @@ VR4300FaultCP0I(struct VR4300 *unused(vr4300)) {
 void
 VR4300FaultCPU(struct VR4300 *vr4300) {
   const struct VR4300FaultManager *manager = &vr4300->pipeline.faultManager;
+  struct VR4300Pipeline *pipeline = &vr4300->pipeline;
   struct VR4300CP0 *cp0 = &vr4300->cp0;
 
   debug("Handing fault: CPU.");
 
-  /* Set the cause register accordingly. */
   cp0->regs.cause.ce = manager->faultCauseData;
-  cp0->regs.cause.excCode = 11;
-
-  /* If exl is not set, save the PC to EPC. */
-  if (vr4300->cp0.regs.status.exl == 0) {
-    uint64_t epc;
-
-    if (manager->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
-      epc = manager->faultingPC - 4;
-      cp0->regs.cause.bd = 1;
-    }
-
-    else {
-      epc = manager->faultingPC;
-      cp0->regs.cause.bd = 0;
-    }
-
-    debugarg("Coprocessor unusable exception [0x%.16lX].", epc);
-    cp0->regs.epc = epc;
-  }
-
-  /* status.exl should now be 1! */
-  cp0->canRaiseInterrupt = 0;
-  cp0->regs.status.exl = 1;
-
-  /* Jump to exception vector. */
-  vr4300->pipeline.icrfLatch.pc = (cp0->regs.status.ds.bev == 1)
-    ? VR4300_GENERAL_BEV_VECTOR - 4
-    : VR4300_GENERAL_VECTOR - 4;
-
-  /* Stall for two cycles (already did one). */
-  vr4300->pipeline.stalls++;
+  CommonExceptionHandler(cp0, &pipeline->icrfLatch.pc,
+    manager->faultingPC, 11, manager->nextOpcodeFlags);
 }
 
 /* ============================================================================
@@ -175,51 +193,18 @@ VR4300FaultICB(struct VR4300 *unused(vr4300)) {
 
 /* ============================================================================
  *  VR4300FaultINTR: Interrupt Exception.
- *  TODO: Correctly handle multiple exceptions.
- *  TODO: Correctly handle branch delay slots.
- *  TODO: Do we need to abort any instructions?
  * ========================================================================= */
 void
 VR4300FaultINTR(struct VR4300 *vr4300) {
   const struct VR4300FaultManager *manager = &vr4300->pipeline.faultManager;
+  struct VR4300Pipeline *pipeline = &vr4300->pipeline;
   struct VR4300CP0 *cp0 = &vr4300->cp0;
 
   debug("Handing fault: INTR.");
 
-  /* Set the cause register accordingly. */
-  cp0->regs.cause.excCode = 0;
-
-  /* If exl is not set, save the PC to EPC. */
-  if (cp0->regs.status.exl == 0) {
-    uint64_t epc;
-
-    if (manager->nextOpcodeFlags & OPCODE_INFO_BRANCH) {
-      epc = manager->faultingPC - 4;
-      cp0->regs.cause.bd = 1;
-    }
-
-    else {
-      epc = manager->faultingPC;
-      cp0->regs.cause.bd = 0;
-    }
-
-    debugarg("Interrupt exception [0x%.16lX].", epc);
-
-    cp0->regs.status.exl = 1;
-    cp0->regs.epc = epc;
-  }
-
-  /* status.exl should now be 1! */
-  cp0->canRaiseInterrupt = 0;
-  cp0->regs.status.exl = 1;
-
-  /* Jump to exception vector. */
-  vr4300->pipeline.icrfLatch.pc = (vr4300->cp0.regs.status.ds.bev == 1)
-    ? VR4300_GENERAL_BEV_VECTOR - 4
-    : VR4300_GENERAL_VECTOR - 4;
-
-  /* Stall for two cycles (already did one). */
-  vr4300->pipeline.stalls++;
+  cp0->regs.cause.ce = manager->faultCauseData;
+  CommonExceptionHandler(cp0, &pipeline->icrfLatch.pc,
+    manager->faultingPC, 0, manager->nextOpcodeFlags);
 }
 
 /* ============================================================================
@@ -227,7 +212,7 @@ VR4300FaultINTR(struct VR4300 *vr4300) {
  * ========================================================================= */
 void
 VR4300FaultINV(struct VR4300 *unused(vr4300)) {
-  assert(0 && "Invoked the 'invalid' fault?");
+  assert(0 && "Caught the 'INV' fault?");
 }
 
 /* ============================================================================
@@ -280,9 +265,6 @@ VR4300FaultRST(struct VR4300 *vr4300) {
 
   debug("Handling fault: RST");
 
-  /* Change the PC to the reset exception vector. */
-  pipeline->icrfLatch.pc = VR4300_RESET_VECTOR;
-
   /* RST/SOFT */
   if (vr4300->pipeline.cycles > 5) {
     debug("Unimplemented fault: RST/Soft.");
@@ -290,25 +272,24 @@ VR4300FaultRST(struct VR4300 *vr4300) {
 
   /* RST/HARD */
   else {
-    /* Status.{TS,SR,RP} fields set to 0. */
-    /* Config.{EP} fields set to 0. */
     cp0->regs.status.ds.ts = 0;
     cp0->regs.status.ds.sr = 0;
     cp0->regs.status.rp = 0;
     cp0->regs.config.ep = 0;
 
-    /* Status.{ERL,BEV} fields set to 1. */
-    /* Config.{BE} fields set to 1. */
     cp0->regs.status.erl = 1;
     cp0->regs.status.ds.bev = 1;
     cp0->regs.config.be = 1;
 
-    /* TODO: Random set to upper limit. */
+    /* Set to upper limit. */
     cp0->regs.random = 31;
 
-    /* TODO: Config.{EC} set to DivMode pins. */
+    /* Set to DivMode pins. */
     cp0->regs.config.ec = 0;
   }
+
+  /* Change the PC to the reset exception vector. */
+  pipeline->icrfLatch.pc = VR4300_RESET_VECTOR - 4;
 }
 
 /* ============================================================================
@@ -344,28 +325,17 @@ VR4300FaultWAT(struct VR4300 *unused(vr4300)) {
 }
 
 /* ============================================================================
- *  Mnemonic and callback tables.
- * ========================================================================= */
-#ifndef NDEBUG
-const char *VR4300FaultMnemonics[NUM_VR4300_FAULTS] = {
-#define X(fault) #fault,
-#include "Fault.md"
-#undef X
-};
-#endif
-
-const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS] = {
-#define X(fault) &VR4300Fault##fault,
-#include "Fault.md"
-#undef X
-};
-
-/* ============================================================================
  *  HandleFaults: Resolves pipeline fault conditions.
  *
  *   Interlocks: Resolve by stalling the pipeline until hardware corrects.
  *   Exceptions: Resolve by aborting both the faulty and subsequent insns.
  * ========================================================================= */
+static const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS] = {
+#define X(fault) &VR4300Fault##fault,
+#include "Fault.md"
+#undef X
+};
+
 void
 HandleFaults(struct VR4300 *vr4300) {
   struct VR4300FaultManager *manager = &vr4300->pipeline.faultManager;
@@ -383,6 +353,7 @@ HandleFaults(struct VR4300 *vr4300) {
   /* Resolve the fault appropriately. */
   FaultHandlerTable[manager->fault](vr4300);
 
+  /* Reset the pipeline (to effectively flush it). */
   vr4300->pipeline.startStage = NUM_VR4300_PIPELINE_STAGES;
   manager->fault = VR4300_FAULT_INV;
 }
@@ -402,7 +373,7 @@ void
 QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
   uint64_t faultingPC, uint32_t nextOpcodeFlags, uint32_t faultCauseData) {
   assert(fault >= manager->fault && "Tried to queue a fault in wrong order.");
-  debugarg("Queued a fault: %s.", VR4300FaultMnemonics[fault]);
+  debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
 
   manager->faultingPC = faultingPC;
   manager->nextOpcodeFlags = nextOpcodeFlags;
