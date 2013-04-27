@@ -13,7 +13,7 @@
 #include "Common.h"
 #include "Pipeline.h"
 
-void VR4300WBStage(const struct VR4300DCWBLatch *, uint64_t[]);
+void VR4300WBStage(struct VR4300 *vr4300);
 
 #endif
 

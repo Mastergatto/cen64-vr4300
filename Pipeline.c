@@ -74,7 +74,6 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
  * ========================================================================= */
 void
 CycleVR4300(struct VR4300 *vr4300) {
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
 
   /* If we're stalling, then twiddle your fingers. */
   if (vr4300->pipeline.stalls > 0)
@@ -85,7 +84,7 @@ CycleVR4300(struct VR4300 *vr4300) {
     CycleVR4300Short[vr4300->pipeline.faultManager.killStage++](vr4300);
 
   else {
-    VR4300WBStage(dcwbLatch, vr4300->regs);
+    VR4300WBStage(vr4300);
     VR4300DCStage(vr4300);
     VR4300EXStage(vr4300);
     VR4300RFStage(vr4300);
@@ -105,9 +104,7 @@ CycleVR4300(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartRF(struct VR4300 *vr4300) {
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
-
-  VR4300WBStage(dcwbLatch, vr4300->regs);
+  VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
   VR4300EXStage(vr4300);
   VR4300RFStage(vr4300);
@@ -119,9 +116,7 @@ CycleVR4300_StartRF(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartEX(struct VR4300 *vr4300) {
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
-
-  VR4300WBStage(dcwbLatch, vr4300->regs);
+  VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
   VR4300EXStage(vr4300);
 }
@@ -132,9 +127,7 @@ CycleVR4300_StartEX(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartDC(struct VR4300 *vr4300) {
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
-
-  VR4300WBStage(dcwbLatch, vr4300->regs);
+  VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
 }
 
