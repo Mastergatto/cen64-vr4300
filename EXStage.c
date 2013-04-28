@@ -1049,9 +1049,22 @@ VR4300LWR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
  *  Instruction: LWU (Load Word Unsigned)
  * ========================================================================= */
 void
-VR4300LWU(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: LWU.");
+VR4300LWU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned dest = GET_RT(rfexLatch->iw);
+  int64_t imm = (int16_t) rfexLatch->iw;
+  uint64_t address = rs + imm;
+
+  if (address & 0x3)
+    debug("Unimplemented fault: VR4300_FAULT_DADE.");
+
+  exdcLatch->memoryData.address = address;
+  exdcLatch->memoryData.function = &VR4300LoadWordU;
+  exdcLatch->memoryData.target = &exdcLatch->result.data;
+
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================

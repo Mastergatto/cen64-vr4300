@@ -37,6 +37,7 @@ void VR4300LoadByteU(const struct VR4300MemoryData *, struct BusController *);
 void VR4300LoadHWord(const struct VR4300MemoryData *, struct BusController *);
 void VR4300LoadHWordU(const struct VR4300MemoryData *, struct BusController *);
 void VR4300LoadWord(const struct VR4300MemoryData *, struct BusController *);
+void VR4300LoadWordU(const struct VR4300MemoryData *, struct BusController *);
 void VR4300LoadDWord(const struct VR4300MemoryData *, struct BusController *);
 void VR4300StoreByte(const struct VR4300MemoryData *, struct BusController *);
 void VR4300StoreHWord(const struct VR4300MemoryData *, struct BusController *);
