@@ -15,6 +15,8 @@
  *  Also, due to the fact that there seems to be no portable (or really, any)
  *  way of easily telling the compiler about use/defines of the FPU status
  *  word, the code must be littered with volatile inline assembler blocks.
+ *
+ *  TODO: Make sure exceptions are being raised.
  * ========================================================================= */
 #include "Common.h"
 #include "CP1.h"
@@ -56,7 +58,10 @@ FPUCheckUsable(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 FPUClearExceptions(void) {
-  feclearexcept(FE_ALL_EXCEPT);
+  __asm__ volatile("fclex\n\t");
+
+  /* POSIX interfaces are far too slow... */
+  /*feclearexcept(FE_ALL_EXCEPT);*/
 }
 
 /* ============================================================================
@@ -72,7 +77,16 @@ FPURaiseException(struct VR4300 *unused(vr4300)) {
  * ========================================================================= */
 static int
 FPUUpdateState(struct VR4300CP1 *cp1) {
-  int flags = fetestexcept(FE_ALL_EXCEPT);
+  uint16_t flags;
+
+  __asm__ volatile(
+    "fstsw %%ax\n\t"
+    : "=a"(flags)
+  );
+
+  /* POSIX interfaces are far too slow... */
+  /*flags = fetestexcept(FE_ALL_EXCEPT);*/
+
   cp1->control.nativeFlags |= flags;
   cp1->control.nativeCause = flags;
 
