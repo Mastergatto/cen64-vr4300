@@ -865,8 +865,6 @@ VR4300LDL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
 
-  debug("ldl");
-
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
@@ -886,8 +884,6 @@ void
 VR4300LDR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
-  debug("ldr");
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -1017,8 +1013,6 @@ VR4300LWL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
 
-  debug("lwl");
-
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
@@ -1038,8 +1032,6 @@ void
 VR4300LWR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
-  debug("lwr");
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
