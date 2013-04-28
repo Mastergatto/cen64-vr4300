@@ -108,15 +108,18 @@ static const uint64_t LoadDWordLeftMaskTable[8] = {
 };
 
 void
-VR4300LoadDWordLeft(const struct VR4300MemoryData *memoryData,
-  struct BusController *bus) {
+VR4300LoadDWordLeft(const struct VR4300MemoryData *memoryData, struct BusController *bus) {
   uint64_t *dest = (uint64_t*) memoryData->target;
   unsigned type = memoryData->address & 0x7;
-  uint64_t dword;
+  uint64_t dword, mask;
 
+  /* Out with the old... */
+  mask = LoadDWordLeftMaskTable[type];
+  *dest &= mask;
+
+  /* ... and in with the new. */
   dword = BusReadDWord(bus, memoryData->address & 0xFFFFFFF8) << (type * 8);
-  dword |= (*dest & LoadDWordLeftMaskTable[type]);
-  *dest = dword;
+  *dest = dword | (*dest & ~mask);
 }
 
 /* ============================================================================
@@ -134,16 +137,19 @@ static const uint64_t LoadDWordRightMaskTable[8] = {
 };
 
 void
-VR4300LoadDWordRight(const struct VR4300MemoryData *memoryData,
-  struct BusController *bus) {
+VR4300LoadDWordRight(const struct VR4300MemoryData *memoryData, struct BusController *bus) {
   uint64_t *dest = (uint64_t*) memoryData->target;
   unsigned type = memoryData->address & 0x7;
   size_t size = type + 1;
-  uint64_t dword;
+  uint64_t dword, mask;
 
+  /* Out with the old... */
+  mask = LoadDWordRightMaskTable[type];
+  *dest &= ~mask;
+
+  /* ... and in with the new. */
   dword = BusReadDWord(bus, memoryData->address & 0xFFFFFFF8) >> (8 - size) * 8;
-  dword |= (uint64_t) (*dest & LoadDWordRightMaskTable[type]);
-  *dest = dword;
+  *dest = *dest | (dword & mask);
 }
 
 /* ============================================================================

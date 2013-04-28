@@ -74,8 +74,6 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
  * ========================================================================= */
 void
 CycleVR4300(struct VR4300 *vr4300) {
-
-  /* If we're stalling, then twiddle your fingers. */
   if (vr4300->pipeline.stalls > 0)
     vr4300->pipeline.stalls--;
 

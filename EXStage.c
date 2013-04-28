@@ -861,9 +861,11 @@ VR4300LDC2(struct VR4300 *unused(vr4300),
  *  Instruction: LDL (Load Doubleword Left)
  * ========================================================================= */
 void
-VR4300LDL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+VR4300LDL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  debug("ldl");
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -873,6 +875,7 @@ VR4300LDL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdcLatch->memoryData.function = &VR4300LoadDWordLeft;
   exdcLatch->memoryData.target = &exdcLatch->result.data;
 
+  exdcLatch->result.data = rt;
   exdcLatch->result.dest = dest;
 }
 
@@ -880,9 +883,11 @@ VR4300LDL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
  *  Instruction: LDR (Load Doubleword Right)
  * ========================================================================= */
 void
-VR4300LDR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+VR4300LDR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  debug("ldr");
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -892,6 +897,7 @@ VR4300LDR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdcLatch->memoryData.function = &VR4300LoadDWordRight;
   exdcLatch->memoryData.target = &exdcLatch->result.data;
 
+  exdcLatch->result.data = rt;
   exdcLatch->result.dest = dest;
 }
 
@@ -1007,9 +1013,11 @@ VR4300LWC2(struct VR4300 *unused(vr4300),
  *  Instruction: LWL (Load Word Left)
  * ========================================================================= */
 void
-VR4300LWL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+VR4300LWL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  debug("lwl");
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -1019,6 +1027,7 @@ VR4300LWL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdcLatch->memoryData.function = &VR4300LoadWordLeft;
   exdcLatch->memoryData.target = &exdcLatch->result.data;
 
+  exdcLatch->result.data = rt;
   exdcLatch->result.dest = dest;
 }
 
@@ -1026,9 +1035,11 @@ VR4300LWL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
  *  Instruction: LWR (Load Word Right)
  * ========================================================================= */
 void
-VR4300LWR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+VR4300LWR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  debug("lwr");
 
   unsigned dest = GET_RT(rfexLatch->iw);
   int64_t imm = (int16_t) rfexLatch->iw;
@@ -1038,6 +1049,7 @@ VR4300LWR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdcLatch->memoryData.function = &VR4300LoadWordRight;
   exdcLatch->memoryData.target = &exdcLatch->result.data;
 
+  exdcLatch->result.data = rt;
   exdcLatch->result.dest = dest;
 }
 
