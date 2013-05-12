@@ -58,10 +58,13 @@ FPUCheckUsable(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 FPUClearExceptions(void) {
+#ifdef USE_X87FPU
   __asm__ volatile("fclex\n\t");
+#else
 
   /* POSIX interfaces are far too slow... */
-  /*feclearexcept(FE_ALL_EXCEPT);*/
+  feclearexcept(FE_ALL_EXCEPT);
+#endif
 }
 
 /* ============================================================================
@@ -79,13 +82,16 @@ static int
 FPUUpdateState(struct VR4300CP1 *cp1) {
   uint16_t flags;
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fstsw %%ax\n\t"
     : "=a"(flags)
   );
+#else
 
   /* POSIX interfaces are far too slow... */
-  /*flags = fetestexcept(FE_ALL_EXCEPT);*/
+  flags = fetestexcept(FE_ALL_EXCEPT);
+#endif
 
   cp1->control.nativeFlags |= flags;
   cp1->control.nativeCause = flags;
@@ -108,6 +114,7 @@ VR4300ABSs(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "fabs\n\t"
@@ -116,6 +123,7 @@ VR4300ABSs(struct VR4300 *vr4300) {
     : "m" (fs->s.data[0])
     : "st"
   );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -140,6 +148,7 @@ VR4300ADDd(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fldl %2\n\t"
@@ -150,6 +159,7 @@ VR4300ADDd(struct VR4300 *vr4300) {
       "m" (ft->d.data)
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -174,6 +184,7 @@ VR4300ADDs(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "flds %2\n\t"
@@ -184,6 +195,7 @@ VR4300ADDs(struct VR4300 *vr4300) {
       "m" (ft->s.data[0])
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -207,6 +219,7 @@ VR4300Ceqs(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "flds %2\n\t"
@@ -218,6 +231,7 @@ VR4300Ceqs(struct VR4300 *vr4300) {
       "m" (ft->s.data[0])
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -241,6 +255,7 @@ VR4300Cled(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fldl %2\n\t"
@@ -252,6 +267,7 @@ VR4300Cled(struct VR4300 *vr4300) {
       "m" (ft->d.data)
     : "st"
     );
+#endif
 
   cp1->control.c = cp1->control.coc;
 }
@@ -270,6 +286,7 @@ VR4300Cles(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "flds %2\n\t"
@@ -281,6 +298,7 @@ VR4300Cles(struct VR4300 *vr4300) {
       "m" (ft->s.data[0])
     : "st"
     );
+#endif
 
   cp1->control.c = cp1->control.coc;
 }
@@ -299,6 +317,7 @@ VR4300Cltd(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fldl %2\n\t"
@@ -310,6 +329,7 @@ VR4300Cltd(struct VR4300 *vr4300) {
       "m" (ft->d.data)
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -333,6 +353,7 @@ VR4300Clts(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "flds %2\n\t"
@@ -344,6 +365,7 @@ VR4300Clts(struct VR4300 *vr4300) {
       "m" (ft->s.data[0])
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -460,6 +482,7 @@ VR4300CVTds(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "fstpl %0\n\t"
@@ -467,6 +490,7 @@ VR4300CVTds(struct VR4300 *vr4300) {
     : "m" (fs->w.data[0])
     : "st"
   );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -490,6 +514,7 @@ VR4300CVTdw(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fildl %1\n\t"
     "fstpl %0\n\t"
@@ -497,6 +522,7 @@ VR4300CVTdw(struct VR4300 *vr4300) {
     : "m" (fs->w.data[0])
     : "st"
   );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -520,6 +546,7 @@ VR4300CVTsd(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fstp %0\n\t"
@@ -527,6 +554,7 @@ VR4300CVTsd(struct VR4300 *vr4300) {
     : "m" (fs->d.data)
     : "st"
   );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -550,6 +578,7 @@ VR4300CVTsw(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fildl %1\n\t"
     "fstp %0\n\t"
@@ -557,6 +586,7 @@ VR4300CVTsw(struct VR4300 *vr4300) {
     : "m" (fs->w.data[0])
     : "st"
   );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -580,6 +610,7 @@ VR4300CVTws(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "fistpl %0\n\t"
@@ -587,6 +618,7 @@ VR4300CVTws(struct VR4300 *vr4300) {
     : "m" (fs->w.data[0])
     : "st"
   );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -611,6 +643,7 @@ VR4300DIVd(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fldl %2\n\t"
@@ -621,6 +654,7 @@ VR4300DIVd(struct VR4300 *vr4300) {
       "m" (ft->d.data)
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -645,6 +679,7 @@ VR4300DIVs(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "flds %2\n\t"
@@ -655,6 +690,7 @@ VR4300DIVs(struct VR4300 *vr4300) {
       "m" (ft->s.data[0])
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -765,6 +801,7 @@ VR4300MULd(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fldl %2\n\t"
@@ -775,6 +812,7 @@ VR4300MULd(struct VR4300 *vr4300) {
       "m" (ft->d.data)
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -799,6 +837,7 @@ VR4300MULs(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "flds %2\n\t"
@@ -809,6 +848,7 @@ VR4300MULs(struct VR4300 *vr4300) {
       "m" (ft->s.data[0])
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -901,6 +941,7 @@ VR4300SQRTs(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "fsqrt\n\t"
@@ -909,6 +950,7 @@ VR4300SQRTs(struct VR4300 *vr4300) {
     : "m" (fs->s.data[0])
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -933,6 +975,7 @@ VR4300SUBd(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fldl %2\n\t"
@@ -943,6 +986,7 @@ VR4300SUBd(struct VR4300 *vr4300) {
       "m" (ft->d.data)
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -967,6 +1011,7 @@ VR4300SUBs(struct VR4300 *vr4300) {
 
   FPUClearExceptions();
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "flds %2\n\t"
@@ -977,6 +1022,7 @@ VR4300SUBs(struct VR4300 *vr4300) {
       "m" (ft->s.data[0])
     : "st"
     );
+#endif
 
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
@@ -1029,6 +1075,7 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
   mode = fegetround();
   fesetround(FE_TOWARDZERO);
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
     "fistpl %0\n\t"
@@ -1036,6 +1083,7 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
     : "m" (fs->l.data)
     : "st"
   );
+#endif
 
   fesetround(mode);
   if (FPUUpdateState(cp1)) {
@@ -1066,6 +1114,7 @@ VR4300TRUNCws(struct VR4300 *vr4300) {
   mode = fegetround();
   fesetround(FE_TOWARDZERO);
 
+#ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
     "fistpl %0\n\t"
@@ -1073,6 +1122,7 @@ VR4300TRUNCws(struct VR4300 *vr4300) {
     : "m" (fs->s.data[0])
     : "st"
   );
+#endif
 
   fesetround(mode);
   if (FPUUpdateState(cp1)) {

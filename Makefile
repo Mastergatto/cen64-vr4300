@@ -35,11 +35,11 @@ MKDIR = /bin/mkdir -p
 AR = ar
 DOXYGEN = doxygen
 
-VR4300_FLAGS = -DLITTLE_ENDIAN
+VR4300_FLAGS = -DLITTLE_ENDIAN -DUSE_X87FPU
 WARNINGS = -Wall -Wextra -pedantic -Wunsafe-loop-optimizations
 
-COMMON_CFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c99 -march=native -I.
-COMMON_CXXFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c++0x -march=native -I.
+COMMON_CFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c99 -mcpu=cortex-a15 -I.
+COMMON_CXXFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c++0x -mcpu=cortex-a15 -I.
 OPTIMIZATION_FLAGS = -flto -fwhole-program -fuse-linker-plugin \
 	-fdata-sections -ffunction-sections -funsafe-loop-optimizations
 

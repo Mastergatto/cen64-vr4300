@@ -574,7 +574,7 @@ void
 VR4300DMULTU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
   uint64_t lo, hi;
 
-#ifdef __GNUC__
+#if(defined(__GNUC__) && (defined(__x86__) || defined(__x86_64__)))
   __uint128_t rs = _rs;
   __uint128_t rt = _rt;
   __uint128_t result;
@@ -585,7 +585,7 @@ VR4300DMULTU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
   hi = result >> 64;
 
 #else
-#error "Unimplemented function: VR4300DMULTU."
+#warning "Unimplemented function: VR4300DMULTU."
 #endif
 
   vr4300->regs[VR4300_REGISTER_LO] = lo;
