@@ -33,7 +33,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
   struct VR4300MemoryData *memoryData = &exdcLatch->memoryData;
   VR4300MemoryFunction function;
 
-  if (memoryData->function == NULL) {
+  if (likely(memoryData->function == NULL)) {
     dcwbLatch->result = exdcLatch->result;
     return;
   }
