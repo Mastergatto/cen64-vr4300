@@ -21,23 +21,23 @@
 typedef const struct RegionInfo Region;
 
 /* Mapped regions. */
-static Region USEG =   {0, 0x0000000000000000ULL, 0x000000007FFFFFFFULL, true};
-static Region UXSEG =  {0, 0x0000000000000000ULL, 0x000000FFFFFFFFFFULL, true};
-static Region XKSSEG = {0, 0x4000000000000000ULL, 0x4000010000000000ULL, true};
-static Region XKSEG =  {0, 0xC000000000000000ULL, 0xC00000FF7FFFFFFFULL, true};
-static Region SSEG =   {0, 0xFFFFFFFFC0000000ULL, 0xFFFFFFFFDFFFFFFFULL, true};
-static Region KSEG3 =  {0, 0xFFFFFFFFE0000000ULL, 0xFFFFFFFFFFFFFFFFULL, true};
+static Region USEG =   {0, 0x0000000000000000ULL, 0x0000000080000000ULL, true};
+static Region UXSEG =  {0, 0x0000000000000000ULL, 0x0000010000000000ULL, true};
+static Region XKSSEG = {0, 0x4000000000000000ULL, 0x0000010000000000ULL, true};
+static Region XKSEG =  {0, 0xC000000000000000ULL, 0x000000FF80000000ULL, true};
+static Region SSEG =   {0, 0xFFFFFFFFC0000000ULL, 0x0000000020000000ULL, true};
+static Region KSEG3 =  {0, 0xFFFFFFFFE0000000ULL, 0x0000000020000000ULL, true};
 
 /* Unmapped regions. */
 static Region KSEG0 = {
   0xFFFFFFFF80000000ULL,
   0xFFFFFFFF80000000ULL,
-  0xFFFFFFFF9FFFFFFFULL, true};
+  0x0000000020000000ULL, true};
 
 static Region KSEG1 = {
   0xFFFFFFFFA0000000ULL,
   0xFFFFFFFFA0000000ULL,
-  0xFFFFFFFFBFFFFFFFULL, false};
+  0x0000000020000000ULL, false};
 
 /* ============================================================================
  *  GetDefaultRegion: Return a pointer to any valid region.
