@@ -25,8 +25,12 @@
 #include <string.h>
 #endif
 
-static void CheckForPendingInterrupts(struct VR4300 *vr4300);
+static void CheckForPendingInterrupts(struct VR4300 *);
 static void IncrementCycleCounters(struct VR4300 *);
+
+#ifdef DO_FASTFORWARD
+static void FastForward(struct VR4300 *);
+#endif
 
 /* ============================================================================
  *  Pipeline exceptions that require us to kill instructions are uncommon.
@@ -38,16 +42,23 @@ static void IncrementCycleCounters(struct VR4300 *);
  *  the pipeline. The stages spend handing the fault count towards the delay
  *  cycles.
  * ========================================================================= */
-static void CycleVR4300_StartRF(struct VR4300 *vr4300);
-static void CycleVR4300_StartEX(struct VR4300 *vr4300);
-static void CycleVR4300_StartDC(struct VR4300 *vr4300);
+static void CycleVR4300_StartRF(struct VR4300 *);
+static void CycleVR4300_StartEX(struct VR4300 *);
+static void CycleVR4300_StartDC(struct VR4300 *);
 typedef void (*ShortPipelineFunction)(struct VR4300 *);
 
+#ifdef DO_FASTFORWARD
+static const ShortPipelineFunction CycleVR4300Short[5] = {
+#else
 static const ShortPipelineFunction CycleVR4300Short[4] = {
+#endif
   CycleVR4300_StartRF,
   CycleVR4300_StartEX,
   CycleVR4300_StartDC,
-  HandleFaults
+  HandleFaults,
+#ifdef DO_FASTFORWARD
+  FastForward,
+#endif
 };
 
 /* ============================================================================
@@ -128,6 +139,20 @@ CycleVR4300_StartDC(struct VR4300 *vr4300) {
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
 }
+
+/* ============================================================================
+ *  Fast forwards the CPU when it's just busy-looping.
+ * ========================================================================= */
+#ifdef DO_FASTFORWARD
+static void
+FastForward(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.killStage--;
+
+  /* Only check on a full cycle. */
+  /* TODO: What about end of stalls? */
+  CheckForPendingInterrupts(vr4300);
+}
+#endif
 
 /* ============================================================================
  *  Bump counters, check for timer interrupts, etc. before we leave.

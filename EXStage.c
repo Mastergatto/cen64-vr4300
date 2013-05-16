@@ -743,6 +743,14 @@ VR4300J(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   uint64_t address = (rfexLatch->iw & 0x3FFFFFF) << 2;
 
+#ifdef DO_FASTFORWARD
+  uint32_t pcCheck = (icrfLatch->pc & 0x7FFFFFFF) - 4;
+  uint32_t addressCheck = address;
+
+  if (pcCheck == addressCheck && vr4300->pipeline.faultManager.killStage == -1)
+    vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
+#endif
+
   icrfLatch->pc &= 0xFFFFFFFFF0000000ULL;
   icrfLatch->pc = (icrfLatch->pc | address) - 4;
 }

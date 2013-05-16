@@ -35,7 +35,7 @@ MKDIR = /bin/mkdir -p
 AR = ar
 DOXYGEN = doxygen
 
-VR4300_FLAGS = -DLITTLE_ENDIAN -DUSE_X87FPU
+VR4300_FLAGS = -DLITTLE_ENDIAN -DUSE_X87FPU -DDO_FASTFORWARD
 WARNINGS = -Wall -Wextra -pedantic -Wunsafe-loop-optimizations
 
 COMMON_CFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c99 -mcpu=cortex-a15 -I.

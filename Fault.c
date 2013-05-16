@@ -110,8 +110,7 @@ QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
   enum VR4300PipelineStage killStage) {
   debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
 
-  assert(killStage < VR4300_PIPELINE_STAGE_WB && "Invalid killStage.");
-  assert((int) killStage >= (int) manager->killStage && "Invalid killStage.");
+  assert(killStage < NUM_VR4300_PIPELINE_STAGES && "Invalid killStage.");
 
   /* Higher priority ready? */
   if (fault < manager->fault)
