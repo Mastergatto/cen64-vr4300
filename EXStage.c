@@ -140,6 +140,13 @@ VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   if (rs != rt)
     return;
 
+#ifdef DO_FASTFORWARD
+  if (address == 0xFFFFFFFFFFFFFFF8 && rs == 0 && rt == 0)
+    if (vr4300->pipeline.faultManager.killStage == -1)
+    vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
+  //assert(0);
+#endif
+
   icrfLatch->pc += address;
 }
 
