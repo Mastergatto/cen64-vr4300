@@ -1737,6 +1737,10 @@ VR4300EXStage(struct VR4300 *vr4300) {
     ? vr4300->regs[rtForwardingRegister]
     : dcwbLatch->result.data;
 
+#ifndef NDEBUG
+  VR4300OpcodeCounts[rfexLatch->opcode.id]++;
+#endif
+
   VR4300FunctionTable[rfexLatch->opcode.id](vr4300, rs, rt);
 }
 

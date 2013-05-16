@@ -52,6 +52,13 @@ const char *MIRegisterMnemonics[NUM_MI_REGISTERS] = {
 #endif
 
 /* ============================================================================
+ *  Executed opcode count table.
+ * ========================================================================= */
+#ifndef NDEBUG
+unsigned long long VR4300OpcodeCounts[NUM_VR4300_OPCODES];
+#endif
+
+/* ============================================================================
  *  CheckForRCPInterrupts: Checks for pending RCP interrupts.
  * ========================================================================= */
 static void

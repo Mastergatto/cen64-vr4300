@@ -45,6 +45,10 @@ enum MIRegister {
 extern const char *RIRegisterMnemonics[NUM_MI_REGISTERS];
 #endif
 
+#ifndef NDEBUG
+extern unsigned long long VR4300OpcodeCounts[NUM_VR4300_OPCODES];
+#endif
+
 struct VR4300 {
   uint64_t regs[NUM_VR4300_REGISTERS];
   uint32_t miregs[NUM_MI_REGISTERS];
