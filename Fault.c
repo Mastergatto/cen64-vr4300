@@ -70,7 +70,7 @@ CommonExceptionHandler(struct VR4300CP0 *cp0, uint64_t *pc,
 
   /* Disable interrupts. */
   /* Switch to kernel mode. */
-  cp0->canRaiseInterrupt = 0;
+  cp0->interruptRaiseMask = 0;
   cp0->regs.status.exl = 1;
 
   /* Jump to the exception vector. */

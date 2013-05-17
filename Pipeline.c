@@ -66,11 +66,10 @@ static const ShortPipelineFunction CycleVR4300Short[4] = {
  * ========================================================================= */
 static void
 CheckForPendingInterrupts(struct VR4300 *vr4300) {
-  if (!vr4300->cp0.canRaiseInterrupt)
-    return;
+  uint8_t mask = vr4300->cp0.regs.cause.ip & vr4300->cp0.regs.status.im;
 
-  /* There are are interrupts pending, and the mask matches... */
-  if (vr4300->cp0.regs.cause.ip & vr4300->cp0.regs.status.im) {
+  /* There are are interrupts pending... */
+  if (mask & vr4300->cp0.interruptRaiseMask) {
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
 
     /* Queue the exception up, prepare to kill stages. */

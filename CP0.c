@@ -94,10 +94,12 @@ VR4300ERET(struct VR4300 *vr4300) {
   }
 
   /* Flatten branches in main loop. */
-  vr4300->cp0.canRaiseInterrupt =
+  static const uint8_t mask[2] = {0, 0xFF};
+
+  vr4300->cp0.interruptRaiseMask = mask[
     vr4300->cp0.regs.status.ie &&
     !vr4300->cp0.regs.status.exl &&
-    !vr4300->cp0.regs.status.erl;
+    !vr4300->cp0.regs.status.erl];
 
   vr4300->cp0.regs.llBit = 0;
   icrfLatch->iwMask = 0;
@@ -273,10 +275,13 @@ VR4300MTC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     assert(vr4300->cp0.regs.status.re == 0);
 
     /* Flatten branches in main loop. */
-    vr4300->cp0.canRaiseInterrupt =
+    static const uint8_t mask[2] = {0, 0xFF};
+
+    vr4300->cp0.interruptRaiseMask = mask[
       vr4300->cp0.regs.status.ie &&
       !vr4300->cp0.regs.status.exl &&
-      !vr4300->cp0.regs.status.erl;
+      !vr4300->cp0.regs.status.erl
+    ];
 
     break;
 
