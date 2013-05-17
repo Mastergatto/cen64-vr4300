@@ -90,7 +90,7 @@ CycleVR4300(struct VR4300 *vr4300) {
 
   /* If any faults were raised, handle and bail. */
   else if (vr4300->pipeline.faultManager.killStage >= 0)
-    CycleVR4300Short[vr4300->pipeline.faultManager.killStage++](vr4300);
+    CycleVR4300Short[vr4300->pipeline.faultManager.killStage](vr4300);
 
   else {
     VR4300WBStage(vr4300);
@@ -113,6 +113,8 @@ CycleVR4300(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartRF(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.killStage++;
+
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
   VR4300EXStage(vr4300);
@@ -125,6 +127,8 @@ CycleVR4300_StartRF(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartEX(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.killStage++;
+
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
   VR4300EXStage(vr4300);
@@ -136,6 +140,8 @@ CycleVR4300_StartEX(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartDC(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.killStage++;
+
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
 }
@@ -146,8 +152,6 @@ CycleVR4300_StartDC(struct VR4300 *vr4300) {
 #ifdef DO_FASTFORWARD
 static void
 FastForward(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.killStage--;
-
   /* Only check on a full cycle. */
   /* TODO: What about end of stalls? */
   CheckForPendingInterrupts(vr4300);
