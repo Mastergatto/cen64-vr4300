@@ -1728,26 +1728,26 @@ VR4300EXStage(struct VR4300 *vr4300) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   const struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  uint64_t rs, rt, temp = vr4300->regs[dcwbLatch->result.dest];
   unsigned rsForwardingRegister = GET_RS(rfexLatch->iw);
   unsigned rtForwardingRegister = GET_RT(rfexLatch->iw);
-  uint64_t rs, rt;
 
-  /* Always invalidate outputs for safety. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+  /* Forward results from DC/WB into the register file (RF). */
+  /* Copy/restore value to prevent the need for branches. */
+  vr4300->regs[dcwbLatch->result.dest] = dcwbLatch->result.data;
+  vr4300->regs[VR4300_REGISTER_ZERO] = 0;
 
-  /* Forward results and invoke the appropriate function. */
-  rs = (dcwbLatch->result.dest != rsForwardingRegister)
-    ? vr4300->regs[rsForwardingRegister]
-    : dcwbLatch->result.data;
+  rs = vr4300->regs[rsForwardingRegister];
+  rt = vr4300->regs[rtForwardingRegister];
 
-  rt = (dcwbLatch->result.dest != rtForwardingRegister)
-    ? vr4300->regs[rtForwardingRegister]
-    : dcwbLatch->result.data;
+  vr4300->regs[dcwbLatch->result.dest] = temp;
 
 #ifndef NDEBUG
   VR4300OpcodeCounts[rfexLatch->opcode.id]++;
 #endif
 
+  /* Always invalidate outputs for safety. */
+  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
   VR4300FunctionTable[rfexLatch->opcode.id](vr4300, rs, rt);
 }
 

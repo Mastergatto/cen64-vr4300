@@ -20,7 +20,7 @@ VR4300WBStage(struct VR4300 *vr4300) {
   struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
   vr4300->regs[dcwbLatch->result.dest] = dcwbLatch->result.data;
 
-  /* Fix ROMs that write to $r0. */
+  /* Fix ROMs that attempt to write to r0. */
   vr4300->regs[VR4300_REGISTER_ZERO] = 0;
 }
 
