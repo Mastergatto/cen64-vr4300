@@ -61,9 +61,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
 
   /* TODO: Bypass the write buffers. */
   memoryData->address -= dcwbLatch->region->offset;
-
   function(memoryData, vr4300->bus);
-  dcwbLatch->result.data = exdcLatch->result.data;
 }
 
 /* ============================================================================
