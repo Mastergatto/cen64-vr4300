@@ -33,8 +33,11 @@ VR4300DCStage(struct VR4300 *vr4300) {
   struct VR4300MemoryData *memoryData = &exdcLatch->memoryData;
   VR4300MemoryFunction function;
 
+  /* Always copy the destination register. */
+  dcwbLatch->result.dest = exdcLatch->result.dest;
+
   if (memoryData->function == NULL) {
-    dcwbLatch->result = exdcLatch->result;
+    dcwbLatch->result.data = exdcLatch->result.data;
     return;
   }
 
@@ -60,7 +63,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
   memoryData->address -= dcwbLatch->region->offset;
 
   function(memoryData, vr4300->bus);
-  dcwbLatch->result = exdcLatch->result;
+  dcwbLatch->result.data = exdcLatch->result.data;
 }
 
 /* ============================================================================

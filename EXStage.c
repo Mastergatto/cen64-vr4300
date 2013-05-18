@@ -1732,6 +1732,9 @@ VR4300EXStage(struct VR4300 *vr4300) {
   unsigned rsForwardingRegister = GET_RS(rfexLatch->iw);
   unsigned rtForwardingRegister = GET_RT(rfexLatch->iw);
 
+  /* Always invalidate results. */
+  exdcLatch->result.dest = 0;
+
   /* Forward results from DC/WB into the register file (RF). */
   /* Copy/restore value to prevent the need for branches. */
   vr4300->regs[dcwbLatch->result.dest] = dcwbLatch->result.data;
@@ -1746,8 +1749,7 @@ VR4300EXStage(struct VR4300 *vr4300) {
   VR4300OpcodeCounts[rfexLatch->opcode.id]++;
 #endif
 
-  /* Always invalidate outputs for safety. */
-  memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
+  /* Invoke the appropriate functional unit. */
   VR4300FunctionTable[rfexLatch->opcode.id](vr4300, rs, rt);
 }
 
