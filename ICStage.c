@@ -26,20 +26,21 @@
 void
 VR4300ICStage(struct VR4300 *vr4300) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
+  const struct RegionInfo *region = icrfLatch->region;
   uint64_t pc = icrfLatch->pc;
 
   /* TODO: Giant hack: bypass the ICache/ITLB/TLB for now. */
-  if (pc < icrfLatch->region->start || pc > icrfLatch->region->end) {
-    const struct RegionInfo *region;
-
+  if (unlikely((pc - region->start) >= region->length)) {
     if ((region = GetRegionInfo(vr4300, pc)) == NULL) {
       debug("Unimplemented fault: VR4300_FAULT_IADE.");
       return;
     }
 
+    icrfLatch->address = pc - region->offset;
     icrfLatch->region = region;
+    return;
   }
 
-  icrfLatch->address = pc - icrfLatch->region->offset;
+  icrfLatch->address = pc - region->offset;
 }
 

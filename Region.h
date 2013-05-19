@@ -16,7 +16,7 @@ struct VR4300;
 struct RegionInfo {
   uint64_t offset;
   uint64_t start;
-  uint64_t end;
+  uint64_t length;
   bool cached;
 };
 

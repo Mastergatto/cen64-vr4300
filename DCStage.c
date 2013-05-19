@@ -36,7 +36,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
   /* Always copy the destination register. */
   dcwbLatch->result.dest = exdcLatch->result.dest;
 
-  if (memoryData->function == NULL) {
+  if (likely(memoryData->function == NULL)) {
     dcwbLatch->result.data = exdcLatch->result.data;
     return;
   }
@@ -46,8 +46,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
   memoryData->function = NULL;
 
   /* Lookup the region that our address lies in. */
-  if (memoryData->address < dcwbLatch->region->start ||
-    memoryData->address > dcwbLatch->region->end) {
+  if ((memoryData->address - dcwbLatch->region->start) >= dcwbLatch->region->length) {
     const struct RegionInfo *region;
 
     if ((region = GetRegionInfo(vr4300, memoryData->address)) == NULL) {

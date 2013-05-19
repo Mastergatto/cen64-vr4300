@@ -50,8 +50,8 @@ struct VR4300EXDCLatch {
 };
 
 struct VR4300DCWBLatch {
-  const struct RegionInfo *region;
   struct VR4300Result result;
+  const struct RegionInfo *region;
 };
 
 struct VR4300Pipeline {
