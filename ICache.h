@@ -16,7 +16,7 @@
 
 struct VR4300ICacheLineData {
   struct VR4300Opcode opcode;
-  uint32_t word;
+  uint32_t word, tag;
 };
 
 struct VR4300ICacheLine {
@@ -25,7 +25,6 @@ struct VR4300ICacheLine {
 
 struct VR4300ICache {
   struct VR4300ICacheLine lines[512];
-  uint32_t tags[512];
   bool valid[512];
 };
 

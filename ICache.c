@@ -34,17 +34,20 @@ void VR4300InitICache(struct VR4300ICache *icache) {
 void VR4300ICacheFill(struct VR4300ICache *icache,
   struct BusController *bus, uint32_t paddr) {
   unsigned lineIdx = paddr >> 5 & 0x1FF;
-  uint32_t tag = paddr >> 12;
   unsigned i;
 
   /* Mark the line as valid. */
   icache->valid[lineIdx] = true;
-  icache->tags[lineIdx] = tag;
 
   /* And fill it entirely. */
   for (i = 0 ; i < 8; i++) {
-    uint32_t word = BusReadWord(bus, paddr + i * 4);
-    icache->lines[lineIdx].data[i].word = word;
+    struct VR4300ICacheLineData *data = &icache->lines[lineIdx].data[i];
+    uint32_t address = paddr + i * 4;
+
+    uint32_t word = BusReadWord(bus, address);
+    data->opcode = *VR4300DecodeInstruction(word);
+    data->tag = address;
+    data->word = word;
   }
 }
 
@@ -53,14 +56,15 @@ void VR4300ICacheFill(struct VR4300ICache *icache,
  * ========================================================================= */
 const struct VR4300ICacheLineData* VR4300ICacheProbe(
   const struct VR4300ICache *icache, uint32_t paddr) {
+  const struct VR4300ICacheLineData *cacheData;
   unsigned lineIdx = paddr >> 5 & 0x1FF;
   unsigned offset = paddr >> 2 & 0x7;
-  uint32_t tag = paddr >> 12;
 
   /* Virtually indexed, physically tagged. */
-  if (!icache->valid[lineIdx] || icache->tags[lineIdx] != tag)
+  cacheData = &icache->lines[lineIdx].data[offset];
+  if (!icache->valid[lineIdx] || cacheData->tag != paddr)
     return NULL;
 
-  return &icache->lines[lineIdx].data[offset];
+  return cacheData;
 }
 

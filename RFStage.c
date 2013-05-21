@@ -38,12 +38,13 @@ VR4300RFStage(struct VR4300 *vr4300) {
   /* Always update PC. */
   icrfLatch->pc += 4;
 
-  /* If it's a cached region... */
+  /* Is the region cache-able? */
   if (icrfLatch->region->cached) {
     const struct VR4300ICacheLineData *cacheData;
+    cacheData = VR4300ICacheProbe(&vr4300->icache, address);
 
-    /* Perform a lookup in the ICache, and fill the line as needed. */
-    if ((cacheData = VR4300ICacheProbe(&vr4300->icache, address)) == NULL) {
+    /* Do we need to fill the line? */
+    if (unlikely(cacheData == NULL)) {
       VR4300ICacheFill(&vr4300->icache, vr4300->bus, address & 0xFFFFFFE0);
       vr4300->pipeline.stalls = 100; /* TODO: Hack. */
 
@@ -51,20 +52,21 @@ VR4300RFStage(struct VR4300 *vr4300) {
       cacheData = VR4300ICacheProbe(&vr4300->icache, address);
     }
 
-    iw = cacheData->word & icrfLatch->iwMask;
+    rfexLatch->opcode = cacheData->opcode;
+    rfexLatch->opcode.id &= icrfLatch->iwMask;
+    rfexLatch->iw = cacheData->word;
   }
 
   else {
     iw = BusReadWord(vr4300->bus, address) & icrfLatch->iwMask;
+    rfexLatch->opcode = *VR4300DecodeInstruction(iw);
+    rfexLatch->iw = iw;
+
     vr4300->pipeline.stalls = 100; /* TODO: Hack. */
   }
 
-  /* Reset the mask again. */
+  /* Reset the mask. */
   icrfLatch->iwMask = ~0;
-
-  /* Decode the instruction, save the results. */
-  rfexLatch->opcode = *VR4300DecodeInstruction(iw);
   rfexLatch->pc = pc;
-  rfexLatch->iw = iw;
 }
 
