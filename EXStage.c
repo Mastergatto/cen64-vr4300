@@ -386,9 +386,24 @@ VR4300BREAK(struct VR4300 *unused(vr4300),
  *  Instruction: CACHE (Cache Operation)
  * ========================================================================= */
 void
-VR4300CACHE(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  /*debug("Unimplemented function: CACHE.");*/
+VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  uint64_t address = rs + (rfexLatch->iw & 0xFFFF);
+
+  switch (rfexLatch->iw >> 16 & 0x3) {
+    case 0:
+      /* TODO: Hack, just invalidate the ICache line for now. */
+      vr4300->icache.valid[(address & 0x7FFFFF) >> 5] = false;
+      break;
+
+    case 1:
+      break;
+
+    case 2:
+    case 3:
+      debug("Reserved CACHE operation.");
+      break;
+  }
 }
 
 /* ============================================================================

@@ -14,6 +14,7 @@
 #include "CP1.h"
 #include "CPU.h"
 #include "Fault.h"
+#include "ICache.h"
 #include "TLBTree.h"
 
 #ifdef __cplusplus
@@ -113,6 +114,7 @@ InitVR4300(struct VR4300 *vr4300) {
   vr4300->bus = NULL;
   VR4300InitCP0(&vr4300->cp0);
   VR4300InitCP1(&vr4300->cp1);
+  VR4300InitICache(&vr4300->icache);
   VR4300InitTLB(&vr4300->tlb);
   VR4300InitPipeline(&vr4300->pipeline);
 

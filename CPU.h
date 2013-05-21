@@ -14,6 +14,7 @@
 #include "CP0.h"
 #include "CP1.h"
 #include "Externs.h"
+#include "ICache.h"
 #include "Pipeline.h"
 #include "TLB.h"
 
@@ -54,6 +55,8 @@ struct VR4300 {
   uint32_t miregs[NUM_MI_REGISTERS];
 
   struct VR4300TLB tlb;
+  struct VR4300ICache icache;
+
   struct BusController *bus;
   struct VR4300CP0 cp0;
   struct VR4300CP1 cp1;
