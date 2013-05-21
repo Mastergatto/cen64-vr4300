@@ -15,11 +15,9 @@
 #include "Pipeline.h"
 
 #ifdef __cplusplus
-#include <cassert>
 #include <cstddef>
 #include <cstring>
 #else
-#include <assert.h>
 #include <stddef.h>
 #include <string.h>
 #endif
@@ -32,28 +30,29 @@ VR4300RFStage(struct VR4300 *vr4300) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   uint32_t address = icrfLatch->address;
-  uint64_t pc = icrfLatch->pc;
   uint32_t iw;
 
   /* Always update PC. */
+  rfexLatch->pc = icrfLatch->pc;
   icrfLatch->pc += 4;
 
   /* Is the region cache-able? */
-  if (icrfLatch->region->cached) {
+  if (likely(icrfLatch->region->cached)) {
     const struct VR4300ICacheLineData *cacheData;
     cacheData = VR4300ICacheProbe(&vr4300->icache, address);
 
     /* Do we need to fill the line? */
     if (unlikely(cacheData == NULL)) {
-      VR4300ICacheFill(&vr4300->icache, vr4300->bus, address & 0xFFFFFFE0);
+      uint32_t lineAddress = address & 0xFFFFFFFE0;
+      VR4300ICacheFill(&vr4300->icache, vr4300->bus, lineAddress);
       vr4300->pipeline.stalls = 100; /* TODO: Hack. */
 
       /* Now that it's cached, perform the probe again. */
       cacheData = VR4300ICacheProbe(&vr4300->icache, address);
     }
 
-    rfexLatch->opcode = cacheData->opcode;
-    rfexLatch->opcode.id &= icrfLatch->iwMask;
+    rfexLatch->opcode.id = cacheData->opcode.id & icrfLatch->iwMask;
+    rfexLatch->opcode.flags = cacheData->opcode.flags;
     rfexLatch->iw = cacheData->word;
   }
 
@@ -67,6 +66,5 @@ VR4300RFStage(struct VR4300 *vr4300) {
 
   /* Reset the mask. */
   icrfLatch->iwMask = ~0;
-  rfexLatch->pc = pc;
 }
 
