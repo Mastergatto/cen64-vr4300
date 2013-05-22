@@ -35,7 +35,7 @@ MKDIR = /bin/mkdir -p
 AR = ar
 DOXYGEN = doxygen
 
-VR4300_FLAGS = -DLITTLE_ENDIAN -DDO_FASTFORWARD
+VR4300_FLAGS = -DLITTLE_ENDIAN -DDO_FASTFORWARD -DUSE_X87FPU
 WARNINGS = -Wall -Wextra -pedantic -Wunsafe-loop-optimizations
 
 COMMON_CFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c99 -march=native -I.
