@@ -206,6 +206,42 @@ VR4300ADDs(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: C.eq.d (Floating-Point Compare).
+ * ========================================================================= */
+static void
+VR4300Ceqd(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  const union VR4300CP1Register *ft = &cp1->regs[GET_FT(rfexLatch->iw)];
+  cp1->control.coc = 0;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fldl %2\n\t"
+    "fucomip\n\t"
+    "sete %0\n\t"
+    "fstp %%st(0)\n\t"
+    : "=m" (cp1->control.coc)
+    : "m" (fs->s.data[0]),
+      "m" (ft->s.data[0])
+    : "st"
+    );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  cp1->control.c = cp1->control.coc;
+}
+
+/* ============================================================================
  *  Instruction: C.eq.s (Floating-Point Compare).
  * ========================================================================= */
 static void
@@ -1204,7 +1240,7 @@ static const FPUOperation fpudFunctions[64] = {
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
-  VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
+  VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300Ceqd,        VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300Cltd,        VR4300FPUDInvalid, VR4300Cled,        VR4300FPUDInvalid
