@@ -166,8 +166,10 @@ MIRegWrite(void *_vr4300, uint32_t address, void *_data) {
     else if (*data & 0x0400)
       result |= MI_EBUS_TEST_MODE;
 
-    if (*data & 0x0800)
+    if (*data & 0x0800) {
       vr4300->miregs[MI_INTR_REG] &= ~MI_INTR_DP;
+      CheckForRCPInterrupts(vr4300);
+    }
 
     if (*data & 0x1000)
       result &= ~MI_RDRAM_REG_MODE;
