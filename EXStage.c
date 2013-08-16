@@ -393,7 +393,7 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   switch (rfexLatch->iw >> 16 & 0x3) {
     case 0:
       /* TODO: Hack, just invalidate the ICache line for now. */
-      vr4300->icache.valid[(address & 0x7FFFFF) >> 5] = false;
+      vr4300->icache.valid[(address >> 5) & 0x1FF] = false;
       break;
 
     case 1:
