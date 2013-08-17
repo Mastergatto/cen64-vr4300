@@ -1612,6 +1612,38 @@ VR4300CVTsw(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: CVT.w.d: (Floating-Point Convert To Single Fixed-Point).
+ * ========================================================================= */
+static void
+VR4300CVTwd(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  float value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->w.data[0])
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->s.data[0] = value;
+}
+
+/* ============================================================================
  *  Instruction: CVT.w.s: (Floating-Point Convert To Single Fixed-Point).
  * ========================================================================= */
 static void
@@ -2315,7 +2347,7 @@ static const FPUOperation fpudFunctions[64] = {
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300CVTsd,       VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
-  VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
+  VR4300CVTwd,       VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300Cfd,         VR4300Cund,        VR4300Ceqd,        VR4300Cueqd,
