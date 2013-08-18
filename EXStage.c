@@ -1597,7 +1597,6 @@ VR4300SWR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
 void
 VR4300SYNC(struct VR4300 *unused(vr4300),
   uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: SYNC.");
 }
 
 /* ============================================================================
