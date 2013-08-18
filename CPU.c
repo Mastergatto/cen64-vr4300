@@ -120,6 +120,7 @@ InitVR4300(struct VR4300 *vr4300) {
 
   /* MESS uses this version, so we will too? */
   vr4300->miregs[MI_VERSION_REG] = 0x01010101;
+  vr4300->miregs[MI_INIT_MODE_REG] = 0x80;
 }
 
 /* ============================================================================
