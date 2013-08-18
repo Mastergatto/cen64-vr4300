@@ -464,9 +464,16 @@ VR4300DADDI(struct VR4300 *unused(vr4300),
  *  Instruction: DADDIU (Doubleword Add Immediate Unsigned)
  * ========================================================================= */
 void
-VR4300DADDIU(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DADDIU.");
+VR4300DADDIU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned dest = GET_RT(rfexLatch->iw);
+  int16_t imm = (int16_t) rfexLatch->iw;
+  int64_t result = rs + (int64_t) imm;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
@@ -483,9 +490,19 @@ VR4300DADDU(struct VR4300 *unused(vr4300),
  *  TODO: Do we write LO/HI here, or wait until WB?
  * ========================================================================= */
 void
-VR4300DDIV(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DDIV.");
+VR4300DDIV(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
+  assert(_rt != 0 && "VR4300DDIV: Quotient is zero?");
+
+  int64_t rs = _rs;
+  int64_t rt = _rt;
+
+  if (likely(rt != 0)) {
+    int64_t div = rs / rt;
+    int64_t mod = rs % rt;
+
+    vr4300->regs[VR4300_REGISTER_LO] = div;
+    vr4300->regs[VR4300_REGISTER_HI] = mod;
+  }
 }
 
 /* ============================================================================
