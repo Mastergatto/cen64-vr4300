@@ -15,6 +15,7 @@
 #include "EXStage.h"
 #include "Opcodes.h"
 #include "Pipeline.h"
+#include "Region.h"
 
 #ifdef __cplusplus
 #include <cassert>
@@ -388,7 +389,18 @@ VR4300BREAK(struct VR4300 *unused(vr4300),
 void
 VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  uint64_t address = rs + (rfexLatch->iw & 0xFFFF);
+  const struct RegionInfo *region;
+
+  int16_t imm = rfexLatch->iw & 0xFFFF;
+  uint64_t address = rs + (int64_t) imm;
+
+  /* Perform address translation to get address. */
+  if ((region = GetRegionInfo(vr4300, address)) == NULL) {
+    debug("Unimplemented fault: VR4300_FAULT_IADE.");
+    return;
+  }
+
+  address -= region->offset;
 
   switch (rfexLatch->iw >> 16 & 0x3) {
     case 0:

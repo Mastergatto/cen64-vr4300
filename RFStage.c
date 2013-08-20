@@ -43,8 +43,7 @@ VR4300RFStage(struct VR4300 *vr4300) {
 
     /* Do we need to fill the line? */
     if (unlikely(cacheData == NULL)) {
-      uint32_t lineAddress = address & 0xFFFFFFFE0;
-      VR4300ICacheFill(&vr4300->icache, vr4300->bus, lineAddress);
+      VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
       vr4300->pipeline.stalls = 100; /* TODO: Hack. */
 
       /* Now that it's cached, perform the probe again. */
