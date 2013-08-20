@@ -50,9 +50,9 @@ VR4300RFStage(struct VR4300 *vr4300) {
       cacheData = VR4300ICacheProbe(&vr4300->icache, address);
     }
 
+    rfexLatch->iw = cacheData->word & icrfLatch->iwMask;
     rfexLatch->opcode.id = cacheData->opcode.id & icrfLatch->iwMask;
-    rfexLatch->opcode.flags = cacheData->opcode.flags;
-    rfexLatch->iw = cacheData->word;
+    rfexLatch->opcode.flags = cacheData->opcode.flags & icrfLatch->iwMask; 
   }
 
   else {
