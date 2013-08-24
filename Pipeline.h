@@ -39,9 +39,9 @@ struct VR4300ICRFLatch {
 };
 
 struct VR4300RFEXLatch {
-  struct VR4300Opcode opcode;
   uint64_t pc;
-  uint32_t iw;
+  struct VR4300Opcode opcode;
+  uint32_t iw, padding;
 };
 
 struct VR4300EXDCLatch {

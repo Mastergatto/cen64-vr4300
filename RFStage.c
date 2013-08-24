@@ -15,12 +15,45 @@
 #include "Pipeline.h"
 
 #ifdef __cplusplus
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #else
+#include <assert.h>
 #include <stddef.h>
 #include <string.h>
 #endif
+
+#ifdef USE_SSE
+#include <emmintrin.h>
+#endif
+
+/* ============================================================================
+ *  ProduceLatchOutputs: Forces latch output to zero if iwMask == 0.
+ * ========================================================================= */
+static void
+ProduceLatchOutputs(uint32_t iwMask,
+  const struct VR4300ICacheLineData *cacheData,
+  struct VR4300RFEXLatch *rfexLatch) {
+
+#ifdef USE_SSE
+    unsigned index = iwMask + 1;
+    static const uint32_t maskTable[2][4] align(16) =
+      {{~0, ~0, ~0, ~0},
+       { 0,  0,  0,  0}};
+
+    assert(sizeof(*cacheData) == 16);
+    __m128i data = _mm_load_si128((__m128i*) cacheData);
+    __m128i mask = _mm_load_si128((__m128i*) maskTable[index]);
+
+    data = _mm_and_si128(data, mask);
+    _mm_store_si128((__m128i*) &rfexLatch->opcode, data);
+#else
+    rfexLatch->iw = cacheData->word & iwMask;
+    rfexLatch->opcode.id = cacheData->opcode.id & iwMask;
+    rfexLatch->opcode.flags = cacheData->opcode.flags & iwMask;
+#endif
+}
 
 /* ============================================================================
  *  VR4300RFStage: Decodes instructions, reads from cache, grabs registers.
@@ -30,7 +63,6 @@ VR4300RFStage(struct VR4300 *vr4300) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   uint32_t address = icrfLatch->address;
-  uint32_t iw;
 
   /* Always update PC. */
   rfexLatch->pc = icrfLatch->pc;
@@ -50,14 +82,16 @@ VR4300RFStage(struct VR4300 *vr4300) {
       cacheData = VR4300ICacheProbe(&vr4300->icache, address);
     }
 
-    rfexLatch->iw = cacheData->word & icrfLatch->iwMask;
-    rfexLatch->opcode.id = cacheData->opcode.id & icrfLatch->iwMask;
-    rfexLatch->opcode.flags = cacheData->opcode.flags & icrfLatch->iwMask; 
+    ProduceLatchOutputs(icrfLatch->iwMask, cacheData, rfexLatch);
   }
 
+  /* Region isn't cachable; fetch a word from memory. */
+  /* Manually force instruction to invalid if iwMask == 0. */
   else {
-    iw = BusReadWord(vr4300->bus, address) & icrfLatch->iwMask;
+    uint32_t iw = BusReadWord(vr4300->bus, address) & icrfLatch->iwMask;
+
     rfexLatch->opcode = *VR4300DecodeInstruction(iw);
+    rfexLatch->opcode.id &= icrfLatch->iwMask;
     rfexLatch->iw = iw;
 
     vr4300->pipeline.stalls = 100; /* TODO: Hack. */

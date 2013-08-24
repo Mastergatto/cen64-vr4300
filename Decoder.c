@@ -12,6 +12,12 @@
 #include "Decoder.h"
 #include "Opcodes.h"
 
+#ifdef __cplusplus
+#include <cstring>
+#else
+#include <string.h>
+#endif
+
 /* These will only touch processor cachelines */
 /* if an invalid/undefined instruction is used. */
 static const struct VR4300Opcode InvalidOpcodeTable[64] = {
@@ -278,6 +284,6 @@ VR4300DecodeInstruction(uint32_t iw) {
  * ========================================================================= */
 void
 VR4300InvalidateOpcode(struct VR4300Opcode *opcode) {
-  *opcode = OpcodeTable[0];
+  memset(opcode, 0, sizeof(*opcode));
 }
 
