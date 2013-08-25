@@ -308,9 +308,19 @@ VR4300BLTZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
  *  Instruction: BLTZAL (Branch On Less Than Zero And Link)
  * ========================================================================= */
 void
-VR4300BLTZAL(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: BLTZAL.");
+VR4300BLTZAL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
+  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+
+  exdcLatch->result.data = icrfLatch->pc + 4;
+  exdcLatch->result.dest = VR4300_REGISTER_RA;
+
+  if ((int64_t) rs >= 0)
+    return;
+
+  icrfLatch->pc += address;
 }
 
 /* ============================================================================
@@ -453,20 +463,35 @@ VR4300CTC2(struct VR4300 *unused(vr4300),
 
 /* ============================================================================
  *  Instruction: DADD (Doubleword Add)
+ *  TODO: Integer overflow exception.
  * ========================================================================= */
 void
-VR4300DADD(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DADD.");
+VR4300DADD(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned dest = GET_RD(rfexLatch->iw);
+  uint64_t result = rs + rt;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
  *  Instruction: DADDI (Doubleword Add Immediate)
+ *  TODO: Integer overflow exception.
  * ========================================================================= */
 void
-VR4300DADDI(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DADDI.");
+VR4300DADDI(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned dest = GET_RT(rfexLatch->iw);
+  int16_t imm = (int16_t) rfexLatch->iw;
+  int64_t result = rs + (int64_t) imm;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
@@ -489,9 +514,15 @@ VR4300DADDIU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
  *  Instruction: DADDU (Doubleword Add Unsigned)
  * ========================================================================= */
 void
-VR4300DADDU(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DADDU.");
+VR4300DADDU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned dest = GET_RD(rfexLatch->iw);
+  int64_t result = rs + rt;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
@@ -609,9 +640,25 @@ VR4300DMTC2(struct VR4300 *unused(vr4300),
  *  Instruction: DMULT (Doubleword Multiply)
  * ========================================================================= */
 void
-VR4300DMULT(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DMULT.");
+VR4300DMULT(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
+  uint64_t lo, hi;
+
+#if(defined(__GNUC__) && (defined(__x86__) || defined(__x86_64__)))
+  __int128_t rs = _rs;
+  __int128_t rt = _rt;
+  __int128_t result;
+
+  result = rs * rt;
+
+  lo = result;
+  hi = result >> 64;
+
+#else
+#warning "Unimplemented function: VR4300DMULT."
+#endif
+
+  vr4300->regs[VR4300_REGISTER_LO] = lo;
+  vr4300->regs[VR4300_REGISTER_HI] = hi;
 }
 
 /* ============================================================================
@@ -660,9 +707,16 @@ VR4300DSLL(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
  *  Instruction: DSLLV (Doubleword Shift Left Logical Variable)
  * ========================================================================= */
 void
-VR4300DSLLV(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DSLLV.");
+VR4300DSLLV(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned sa = rs & 0x3F;
+  unsigned dest = GET_RD(rfexLatch->iw);
+  uint64_t result = rt << sa;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
@@ -685,18 +739,32 @@ VR4300DSLL32(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
  *  Instruction: DSRA (Doubleword Shift Right Arithmetic)
  * ========================================================================= */
 void
-VR4300DSRA(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DSRA.");
+VR4300DSRA(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned sa = rfexLatch->iw >> 6 & 0x1F;
+  unsigned dest = GET_RD(rfexLatch->iw);
+  uint64_t result = (int64_t) rt >> sa;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
  *  Instruction: DSRAV (Doubleword Shift Right Arithmetic Variable)
  * ========================================================================= */
 void
-VR4300DSRAV(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DSRAV.");
+VR4300DSRAV(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned sa = rs & 0x3F;
+  unsigned dest = GET_RD(rfexLatch->iw);
+  uint64_t result = (int64_t) rt >> sa;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
@@ -735,9 +803,16 @@ VR4300DSRL(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
  *  Instruction: DSRLV (Doubleword Shift Right Logical Variable)
  * ========================================================================= */
 void
-VR4300DSRLV(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DSRLV.");
+VR4300DSRLV(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned sa = rs & 0x3F;
+  unsigned dest = GET_RD(rfexLatch->iw);
+  uint64_t result = rt >> sa;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
@@ -758,20 +833,33 @@ VR4300DSRL32(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
 /* ============================================================================
  *  Instruction: DSUB (Doubleword Subtract)
+ *  TODO: Integer overflow exception.
  * ========================================================================= */
 void
-VR4300DSUB(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DSUB.");
+VR4300DSUB(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned dest = GET_RD(rfexLatch->iw);
+  int64_t result = rs - rt;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ============================================================================
  *  Instruction: DSUBU (Doubleword Subtract Unsigned)
  * ========================================================================= */
 void
-VR4300DSUBU(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DSUBU.");
+VR4300DSUBU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned dest = GET_RD(rfexLatch->iw);
+  int64_t result = rs - rt;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = dest;
 }
 
 /* ==========================================================================
