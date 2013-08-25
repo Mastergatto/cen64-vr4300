@@ -111,7 +111,6 @@ Region* GetRegionInfo(const struct VR4300 *vr4300, uint64_t address) {
     if ((upper - 0x40000000) < 0x00000100)
       return &XKSSEG;
 
-  debugarg("GetRegionInfo: Invalid address [0x%.16llx].", address);
   return NULL;
 }
 

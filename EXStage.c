@@ -134,16 +134,15 @@ void
 VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  uint64_t address = ((int64_t) ((int16_t) rfexLatch->iw << 2)) - 4;
 
   if (rs != rt)
     return;
 
 #ifdef DO_FASTFORWARD
-  if (address == 0xFFFFFFFFFFFFFFF8 && rs == 0 && rt == 0)
+  if (address == 0xFFFFFFFFFFFFFFF8ULL && !rs)
     if (vr4300->pipeline.faultManager.killStage == -1)
-    vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
-  //assert(0);
+      vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
 #endif
 
   icrfLatch->pc += address;
@@ -898,8 +897,9 @@ VR4300LD(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x7)
+  if (address & 0x7) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadDWord;
@@ -972,8 +972,9 @@ VR4300LH(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x1)
+  if (address & 0x1) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadHWord;
@@ -995,8 +996,9 @@ VR4300LHU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x1)
+  if (address & 0x1) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadHWordU;
@@ -1051,8 +1053,9 @@ VR4300LW(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x3)
+  if (address & 0x3) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWord;
@@ -1125,8 +1128,9 @@ VR4300LWU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x3)
+  if (address & 0x3) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWordU;
@@ -1319,8 +1323,9 @@ VR4300SD(struct VR4300 *vr4300,uint64_t rs, uint64_t rt) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x7)
+  if (address & 0x7) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreDWord;
@@ -1365,8 +1370,9 @@ VR4300SH(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x1)
+  if (address & 0x1) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreHWord;
@@ -1569,8 +1575,9 @@ VR4300SW(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   int64_t imm = (int16_t) rfexLatch->iw;
   uint64_t address = rs + imm;
 
-  if (address & 0x3)
+  if (address & 0x3) {
     debug("Unimplemented fault: VR4300_FAULT_DADE.");
+  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreWord;

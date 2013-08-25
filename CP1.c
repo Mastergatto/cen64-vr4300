@@ -1418,11 +1418,13 @@ VR4300CFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300CP1Control *control = &vr4300->cp1.control;
-  unsigned rd = GET_RD(rfexLatch->iw);
   unsigned rt = GET_RT(rfexLatch->iw); 
   uint32_t result;
 
+#ifndef NDEBUG
+  unsigned rd = GET_RD(rfexLatch->iw);
   assert ((rd == 0 || rd == 31) && "Tried to read reserved CP1 register.");
+#endif
 
   if (!FPUCheckUsable(vr4300)) 
     return;
@@ -1461,12 +1463,14 @@ CTC1SimulatedToNative(int excepts) {
 
 void
 VR4300CTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300CP1Control *control = &vr4300->cp1.control;
+
+#ifndef NDEBUG
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   unsigned rd = GET_RD(rfexLatch->iw);
 
-  /* Always invalidate outputs. */
   assert(rd == 31 && "Tried to modify reserved CP1 register.");
+#endif
 
   if (!FPUCheckUsable(vr4300))
     return;
