@@ -14,20 +14,31 @@
 
 struct BusController;
 
-uint8_t BusReadByte(const struct BusController *, uint32_t);
-uint64_t BusReadDWord(const struct BusController *, uint32_t);
-uint16_t BusReadHWord(const struct BusController *, uint32_t);
+enum BusType {
+  BUS_TYPE_BYTE = 0,
+  BUS_TYPE_HWORD,
+  BUS_TYPE_WORD,
+  BUS_TYPE_UWORD,
+  BUS_TYPE_DWORD,
+};
+
+/* When writing unaligned data, use this structure. */
+/* The size can be any value between 1 <= x <= 8 bytes. */
+struct UnalignedData {
+  uint8_t data[8];
+  size_t size;
+};
+
+typedef int (*MemoryFunction)(void *opaque,
+  uint32_t address, void *contents);
+
+MemoryFunction BusRead(const struct BusController *bus,
+  unsigned type, uint32_t address, void **opaque);
+MemoryFunction BusWrite(const struct BusController *bus,
+  unsigned type, uint32_t address, void **opaque);
+
+/* This "old" memory read function is reserved for IW reads. */
 uint32_t BusReadWord(const struct BusController *, uint32_t);
-void BusWriteByte(const struct BusController *, uint32_t, uint8_t);
-void BusWriteDWord(const struct BusController *, uint32_t, uint64_t);
-void BusWriteHWord(const struct BusController *, uint32_t, uint16_t);
-void BusWriteWord(const struct BusController *, uint32_t, uint32_t);
-
-uint32_t BusReadWordUnaligned(const struct BusController *, uint32_t, size_t);
-void BusWriteWordUnaligned(const struct BusController *,
-  uint32_t, uint32_t, size_t);
-
-const uint8_t *BusGetRDRAMPointer(struct BusController *);
 
 #endif
 
