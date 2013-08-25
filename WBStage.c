@@ -11,16 +11,14 @@
 #include "Common.h"
 #include "CPU.h"
 #include "Pipeline.h"
+#include "WBStage.h"
 
 /* ============================================================================
  *  VR4300WBStage: Writes results back to the register file.
  * ========================================================================= */
 void
 VR4300WBStage(struct VR4300 *vr4300) {
-  struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
+  const struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
   vr4300->regs[dcwbLatch->result.dest] = dcwbLatch->result.data;
-
-  /* Fix ROMs that attempt to write to r0. */
-  vr4300->regs[VR4300_REGISTER_ZERO] = 0;
 }
 

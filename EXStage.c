@@ -11,9 +11,7 @@
 #include "Common.h"
 #include "CPU.h"
 #include "Decoder.h"
-#include "DCStage.h"
 #include "EXStage.h"
-#include "Opcodes.h"
 #include "Pipeline.h"
 #include "Region.h"
 

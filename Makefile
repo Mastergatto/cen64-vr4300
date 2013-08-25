@@ -60,8 +60,8 @@ WARNINGS = -Wall -Wextra -pedantic
 
 COMMON_CFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c99 -march=native -I.
 COMMON_CXXFLAGS = $(WARNINGS) $(VR4300_FLAGS) -std=c++0x -march=native -I.
-OPTIMIZATION_FLAGS = -flto -fwhole-program -fuse-linker-plugin \
-	-fdata-sections -ffunction-sections -funsafe-loop-optimizations
+OPTIMIZATION_FLAGS = -flto -fuse-linker-plugin -fdata-sections \
+  -ffunction-sections -funsafe-loop-optimizations
 
 ARFLAGS = rcs
 RELEASE_CFLAGS = -DNDEBUG -O3 $(OPTIMIZATION_FLAGS)

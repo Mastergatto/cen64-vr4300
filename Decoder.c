@@ -222,44 +222,44 @@ static const struct VR4300Opcode OpcodeTable[64] = {
 /* see a processor cacheline, so not much waste here. */
 static const struct VR4300OpcodeEscape EscapeTable[64] = {
   {SpecialOpcodeTable,  0, 0x3F}, {RegImmOpcodeTable,  16, 0x1F},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
 
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
 
   {COP0OpcodeTable,    21, 0x1F}, {COP1OpcodeTable,    21, 0x1F},
-  {COP2OpcodeTable,    21, 0x1F}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {COP2OpcodeTable,    21, 0x1F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
 
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
 
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
 
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
   
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
 
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
-  {InvalidOpcodeTable,  0,    0}, {InvalidOpcodeTable,  0,    0},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
+  {OpcodeTable,        26, 0x3F}, {OpcodeTable,        26, 0x3F},
 };
 
 /* ============================================================================
@@ -268,15 +268,10 @@ static const struct VR4300OpcodeEscape EscapeTable[64] = {
  * ========================================================================= */
 const struct VR4300Opcode*
 VR4300DecodeInstruction(uint32_t iw) {
-  const struct VR4300Opcode *opcode = &OpcodeTable[iw >> 26];
+  const struct VR4300OpcodeEscape *escape = &EscapeTable[iw >> 26];
+  unsigned index = iw >> escape->shift & escape->mask;
 
-  if (opcode->id == VR4300_OPCODE_INV) {
-    const struct VR4300OpcodeEscape *escape = &EscapeTable[iw >> 26];
-    uint8_t index = iw >> escape->shift & escape->mask;
-    return &escape->table[index];
-  }
-
-  return opcode;
+  return &escape->table[index];
 }
 
 /* ============================================================================

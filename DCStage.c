@@ -31,24 +31,22 @@ VR4300DCStage(struct VR4300 *vr4300) {
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
   struct VR4300MemoryData *memoryData = &exdcLatch->memoryData;
-  VR4300MemoryFunction function;
+  VR4300MemoryFunction function = memoryData->function;
+  const struct RegionInfo *region;
 
   /* Always copy the destination register. */
   dcwbLatch->result.dest = exdcLatch->result.dest;
 
-  if (likely(memoryData->function == NULL)) {
+  if (likely(function == NULL)) {
     dcwbLatch->result.data = exdcLatch->result.data;
     return;
   }
 
-  /* Reset before EXStage. */
-  function = memoryData->function;
+  /* Lookup the region that our address lies in. */
+  region = dcwbLatch->region;
   memoryData->function = NULL;
 
-  /* Lookup the region that our address lies in. */
-  if ((memoryData->address - dcwbLatch->region->start) >= dcwbLatch->region->length) {
-    const struct RegionInfo *region;
-
+  if ((memoryData->address - region->start) >= region->length) {
     if ((region = GetRegionInfo(vr4300, memoryData->address)) == NULL) {
       memset(&dcwbLatch->result, 0, sizeof(dcwbLatch->result));
       debug("Unimplemented fault: VR4300_FAULT_DADE.");
@@ -59,7 +57,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
   }
 
   /* TODO: Bypass the write buffers. */
-  memoryData->address -= dcwbLatch->region->offset;
+  memoryData->address -= region->offset;
   function(memoryData, vr4300->bus);
 }
 

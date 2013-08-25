@@ -22,30 +22,23 @@
 #endif
 
 /* ============================================================================
- *  Initializes the instruction cache, invalidating all lines.
- * ========================================================================= */
-void VR4300InitICache(struct VR4300ICache *icache) {
-  memset(icache->valid, 0, sizeof(icache->valid));
-}
-
-/* ============================================================================
  *  Fills an instruction cache line, sets the tags, etc.
  * ========================================================================= */
 void VR4300ICacheFill(struct VR4300ICache *icache,
   struct BusController *bus, uint32_t paddr) {
+  struct VR4300ICacheLineData *data;
   unsigned lineIdx = paddr >> 5 & 0x1FF;
-  unsigned ppo = paddr & 0xFFFFFFE0;
+  unsigned ppo = paddr >> 5;
   unsigned i;
 
   /* Mark the line as valid. */
+  data = icache->lines[lineIdx].data;
   icache->valid[lineIdx] = true;
+  paddr &= 0xFFFFFFE0;
 
   /* And fill it entirely. */
-  for (i = 0 ; i < 8; i++) {
-    struct VR4300ICacheLineData *data = &icache->lines[lineIdx].data[i];
-    uint32_t address = ppo + i * 4;
-
-    uint32_t word = BusReadWord(bus, address);
+  for (i = 0 ; i < 8; i++, paddr += 4, data++) {
+    uint32_t word = BusReadWord(bus, paddr);
     data->opcode = *VR4300DecodeInstruction(word);
     data->word = word;
     data->tag = ppo;
@@ -60,13 +53,20 @@ const struct VR4300ICacheLineData* VR4300ICacheProbe(
   const struct VR4300ICacheLineData *cacheData;
   unsigned lineIdx = paddr >> 5 & 0x1FF;
   unsigned offset = paddr >> 2 & 0x7;
-  unsigned ppo = paddr & 0xFFFFFFE0;
+  unsigned ppo = paddr >> 5;
 
   /* Virtually indexed, physically tagged. */
   cacheData = &icache->lines[lineIdx].data[offset];
-  if (!icache->valid[lineIdx] || cacheData->tag != (paddr & ppo))
+  if (!icache->valid[lineIdx] || cacheData->tag != ppo)
     return NULL;
 
   return cacheData;
+}
+
+/* ============================================================================
+ *  Initializes the instruction cache, invalidating all lines.
+ * ========================================================================= */
+void VR4300InitICache(struct VR4300ICache *icache) {
+  memset(icache->valid, 0, sizeof(icache->valid));
 }
 
