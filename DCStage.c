@@ -60,6 +60,8 @@ VR4300DCStage(struct VR4300 *vr4300) {
 
   /* Corner case: LDL/LDR/LWL/LWR only loads data into part of */
   /* a register; it expects to find the rest of it in the target. */
+  vr4300->regs[0] = 0;
+
   dcwbLatch->result.data = vr4300->regs[dcwbLatch->result.dest];
 
   /* TODO: Bypass the write buffers. */
@@ -487,9 +489,9 @@ VR4300StoreDWordRight(
 
   /* Pack the unaligned data structure. */
   /* TODO/FIXME: Take endianness into account. */
-  contents = ByteOrderSwap64(contents);
   data.size = (memoryData->address & 0x7) + 1;
   contents = contents << ((8 - data.size) << 3);
+  contents = ByteOrderSwap64(contents);
   memcpy(data.data, &contents, sizeof(contents));
 
   if ((write = BusWrite(bus, BUS_TYPE_UDWORD, address, &opaque)) == NULL)
@@ -570,9 +572,9 @@ VR4300StoreWordRight(
 
   /* Pack the unaligned data structure. */
   /* TODO/FIXME: Take endianness into account. */
-  contents = ByteOrderSwap32(contents);
   data.size = (memoryData->address & 0x3) + 1;
   contents = contents << ((4 - data.size) << 3);
+  contents = ByteOrderSwap32(contents);
   memcpy(data.data, &contents, sizeof(contents));
 
   if ((write = BusWrite(bus, BUS_TYPE_UWORD, address, &opaque)) == NULL)
