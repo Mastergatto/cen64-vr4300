@@ -16,10 +16,11 @@ struct BusController;
 
 enum BusType {
   BUS_TYPE_BYTE = 0,
-  BUS_TYPE_HWORD,
-  BUS_TYPE_WORD,
-  BUS_TYPE_UWORD,
-  BUS_TYPE_DWORD,
+  BUS_TYPE_HWORD = 1,
+  BUS_TYPE_WORD = 2,
+  BUS_TYPE_UWORD = 3,
+  BUS_TYPE_UDWORD = 3,
+  BUS_TYPE_DWORD = 4,
 };
 
 /* When writing unaligned data, use this structure. */

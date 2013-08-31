@@ -60,6 +60,10 @@ void VR4300LoadDWordLeft(const struct VR4300MemoryData *,
   struct BusController *);
 void VR4300LoadDWordRight(const struct VR4300MemoryData *,
   struct BusController *);
+void VR4300StoreDWordLeft(const struct VR4300MemoryData *,
+  struct BusController *);
+void VR4300StoreDWordRight(const struct VR4300MemoryData *,
+  struct BusController *);
 
 #endif
 

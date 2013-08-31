@@ -1433,18 +1433,32 @@ VR4300SDC2(struct VR4300 *unused(vr4300),
  *  Instruction: SDL (Store Doubleword Left)
  * ========================================================================= */
 void
-VR4300SDL(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: SDL.");
+VR4300SDL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  int64_t imm = (int16_t) rfexLatch->iw;
+  uint64_t address = rs + imm;
+
+  exdcLatch->memoryData.address = address;
+  exdcLatch->memoryData.function = &VR4300StoreDWordLeft;
+  exdcLatch->memoryData.data = rt;
 }
 
 /* ============================================================================
  *  Instruction: SDR (Store Doubleword Right)
  * ========================================================================= */
 void
-VR4300SDR(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: SDR.");
+VR4300SDR(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  int64_t imm = (int16_t) rfexLatch->iw;
+  uint64_t address = rs + imm;
+
+  exdcLatch->memoryData.address = address;
+  exdcLatch->memoryData.function = &VR4300StoreDWordRight;
+  exdcLatch->memoryData.data = rt;
 }
 
 /* ============================================================================

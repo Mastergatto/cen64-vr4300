@@ -450,6 +450,55 @@ VR4300StoreDWord(
 }
 
 /* ============================================================================
+ *  VR4300StoreDWordLeft: Writes a doubleword to the DCache/Bus.
+ * ========================================================================= */
+void
+VR4300StoreDWordLeft(
+  const struct VR4300MemoryData *memoryData, struct BusController *bus) {
+  uint32_t address = memoryData->address;
+  uint64_t contents = memoryData->data;
+  struct UnalignedData data;
+  MemoryFunction write;
+  void *opaque;
+
+  /* Pack the unaligned data structure. */
+  /* TODO/FIXME: Take endianness into account. */
+  contents = ByteOrderSwap64(contents);
+  data.size = 8 - (memoryData->address & 0x7);
+  memcpy(data.data, &contents, sizeof(contents));
+
+  if ((write = BusWrite(bus, BUS_TYPE_UDWORD, address, &opaque)) == NULL)
+    return;
+
+  write(opaque, address, &data);
+}
+
+/* ============================================================================
+ *  VR4300DStoreWordRight: Writes a doubleword to the DCache/Bus.
+ * ========================================================================= */
+void
+VR4300StoreDWordRight(
+  const struct VR4300MemoryData *memoryData, struct BusController *bus) {
+  uint32_t address = memoryData->address & 0xFFFFFFF8;
+  uint64_t contents = memoryData->data;
+  struct UnalignedData data;
+  MemoryFunction write;
+  void *opaque;
+
+  /* Pack the unaligned data structure. */
+  /* TODO/FIXME: Take endianness into account. */
+  contents = ByteOrderSwap64(contents);
+  data.size = (memoryData->address & 0x7) + 1;
+  contents = contents << ((8 - data.size) << 3);
+  memcpy(data.data, &contents, sizeof(contents));
+
+  if ((write = BusWrite(bus, BUS_TYPE_UDWORD, address, &opaque)) == NULL)
+    return;
+
+  write(opaque, address, &data);
+}
+
+/* ============================================================================
  *  VR4300StoreHWord: Writes a halfword to the DCache/Bus.
  * ========================================================================= */
 void

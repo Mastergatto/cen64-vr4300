@@ -127,5 +127,15 @@ static inline uint32_t ByteOrderSwap32(uint32_t word) {
 #endif
 }
 
+static inline uint64_t ByteOrderSwap64(uint64_t dword) {
+#ifndef LITTLE_ENDIAN
+  return dword;
+#elif defined(_MSC_VER)
+  return _byteswap_uint64(dword);
+#else
+  return __builtin_bswap64(dword);
+#endif
+}
+
 #endif
 
