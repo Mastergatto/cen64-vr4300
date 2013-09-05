@@ -88,10 +88,7 @@ CycleVR4300(struct VR4300 *vr4300) {
     vr4300->pipeline.stalls--;
 
   /* If any faults were raised, handle and bail. */
-  else if (vr4300->pipeline.faultManager.killStage >= 0)
-    CycleVR4300Short[vr4300->pipeline.faultManager.killStage](vr4300);
-
-  else {
+  else if (vr4300->pipeline.faultManager.killStage < 0) {
     VR4300WBStage(vr4300);
     VR4300DCStage(vr4300);
     VR4300EXStage(vr4300);
@@ -102,6 +99,9 @@ CycleVR4300(struct VR4300 *vr4300) {
     /* TODO: What about end of stalls? */
     CheckForPendingInterrupts(vr4300);
   }
+
+  else
+    CycleVR4300Short[vr4300->pipeline.faultManager.killStage](vr4300);
 
   IncrementCycleCounters(vr4300);
 }
