@@ -1526,7 +1526,7 @@ VR4300CVTds(struct VR4300 *vr4300) {
     "flds %1\n\t"
     "fstpl %0\n\t"
     : "=m" (value)
-    : "m" (fs->w.data[0])
+    : "m" (fs->s.data[0])
     : "st"
   );
 #endif
@@ -1645,7 +1645,7 @@ VR4300CVTwd(struct VR4300 *vr4300) {
 
   const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
   union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
-  float value;
+  uint32_t value;
 
   FPUClearExceptions();
 
@@ -1654,7 +1654,7 @@ VR4300CVTwd(struct VR4300 *vr4300) {
     "fldl %1\n\t"
     "fistpl %0\n\t"
     : "=m" (value)
-    : "m" (fs->w.data[0])
+    : "m" (fs->l.data)
     : "st"
   );
 #endif
@@ -1664,7 +1664,7 @@ VR4300CVTwd(struct VR4300 *vr4300) {
     return;
   }
 
-  fd->s.data[0] = value;
+  fd->w.data[0] = value;
 }
 
 /* ============================================================================
@@ -1686,7 +1686,7 @@ VR4300CVTws(struct VR4300 *vr4300) {
     "flds %1\n\t"
     "fistpl %0\n\t"
     : "=m" (value)
-    : "m" (fs->w.data[0])
+    : "m" (fs->s.data[0])
     : "st"
   );
 #endif
@@ -1696,7 +1696,7 @@ VR4300CVTws(struct VR4300 *vr4300) {
     return;
   }
 
-  fd->s.data[0] = value;
+  fd->w.data[0] = value;
 }
 
 /* ============================================================================
