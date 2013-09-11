@@ -1859,6 +1859,7 @@ void
 VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  int32_t result;
 
   unsigned fs = GET_FS(rfexLatch->iw);
   unsigned rt = GET_RT(rfexLatch->iw);
@@ -1867,12 +1868,11 @@ VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
     return;
 
   if (vr4300->cp0.regs.status.fr)
-    exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
-  else {
-    int32_t data = vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1];
-    exdcLatch->result.data = (int64_t) data;
-  }
+    result = exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
+  else
+    result = vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1];
 
+  exdcLatch->result.data = (int64_t) result;
   exdcLatch->result.dest = rt;
 }
 
