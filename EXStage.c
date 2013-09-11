@@ -140,7 +140,7 @@ VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
     return;
 
 #ifdef DO_FASTFORWARD
-  if (address == 0xFFFFFFFFFFFFFFF8ULL && !rs)
+  if (address == 0xFFFFFFFFFFFFFFFCULL && !rs)
     if (vr4300->pipeline.faultManager.killStage == -1)
       vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
 #endif
