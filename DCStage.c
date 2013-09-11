@@ -267,50 +267,6 @@ VR4300LoadWord(
 }
 
 /* ============================================================================
- *  VR4300LoadWordU: Reads a word from the DCache/Bus.
- * ========================================================================= */
-void
-VR4300LoadWordU(
-  const struct VR4300MemoryData *memoryData, struct BusController *bus) {
-  uint32_t address = memoryData->address;
-  MemoryFunction read;
-
-  uint64_t result;
-  uint32_t contents;
-  void *opaque;
-
-  if ((read = BusRead(bus, BUS_TYPE_WORD, address, &opaque)) == NULL)
-    return;
-
-  read(opaque, address, &contents);
-  result = contents;
-
-  memcpy(memoryData->target, &result, sizeof(result));
-}
-
-/* ============================================================================
- *  VR4300LoadDWordFPU: Reads a word from the DCache/Bus.
- * ========================================================================= */
-void
-VR4300LoadDWordFPU(
-  const struct VR4300MemoryData *memoryData, struct BusController *bus) {
-  uint32_t address = memoryData->address;
-  MemoryFunction read;
-
-  uint64_t result;
-  uint64_t contents;
-  void *opaque;
-
-  if ((read = BusRead(bus, BUS_TYPE_DWORD, address, &opaque)) == NULL)
-    return;
-
-  read(opaque, address, &contents);
-  result = contents;
-
-  memcpy(memoryData->target, &result, sizeof(result));
-}
-
-/* ============================================================================
  *  VR4300LoadWordFPU: Reads a word from the DCache/Bus.
  * ========================================================================= */
 void
@@ -320,6 +276,28 @@ VR4300LoadWordFPU(
   MemoryFunction read;
 
   uint32_t result;
+  uint32_t contents;
+  void *opaque;
+
+ if ((read = BusRead(bus, BUS_TYPE_WORD, address, &opaque)) == NULL)
+    return;
+
+  read(opaque, address, &contents);
+  result = contents;
+
+  memcpy(memoryData->target, &result, sizeof(result));
+}
+
+/* ============================================================================
+ *  VR4300LoadWordU: Reads a word from the DCache/Bus.
+ * ========================================================================= */
+void
+VR4300LoadWordU(
+  const struct VR4300MemoryData *memoryData, struct BusController *bus) {
+  uint32_t address = memoryData->address;
+  MemoryFunction read;
+
+  uint64_t result;
   uint32_t contents;
   void *opaque;
 

@@ -45,7 +45,6 @@ void VR4300StoreWord(const struct VR4300MemoryData *, struct BusController *);
 void VR4300StoreDWord(const struct VR4300MemoryData *, struct BusController *);
 
 void VR4300LoadWordFPU(const struct VR4300MemoryData *, struct BusController *);
-void VR4300LoadDWordFPU(const struct VR4300MemoryData *, struct BusController *);
 
 /* Unaligned accesses. */
 void VR4300LoadWordLeft(const struct VR4300MemoryData *,

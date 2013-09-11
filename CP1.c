@@ -1455,8 +1455,8 @@ VR4300CFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   result |= control->c << 23;
   result |= control->fs << 24;
 
-  exdcLatch->result.data = result;
-  exdcLatch->result.dest = (int64_t) rt;
+  exdcLatch->result.data = (int64_t) result;
+  exdcLatch->result.dest = rt;
 }
 
 /* ============================================================================
@@ -1792,7 +1792,7 @@ VR4300LDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     exdcLatch->memoryData.target = &vr4300->cp1.regs[ft & 0x1E].l.data;
 
   exdcLatch->memoryData.address = address;
-  exdcLatch->memoryData.function = &VR4300LoadDWordFPU;
+  exdcLatch->memoryData.function = &VR4300LoadDWord;
 }
 
 /* ============================================================================
@@ -1850,6 +1850,47 @@ VR4300MOVs(struct VR4300 *vr4300) {
 
   value = fs->s.data[0];
   fd->s.data[0] = value;
+}
+
+/* ============================================================================
+ *  Instruction: MFC1 (Move From Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+
+  unsigned fs = GET_FS(rfexLatch->iw);
+  unsigned rt = GET_RT(rfexLatch->iw);
+
+  if (!FPUCheckUsable(vr4300))
+    return;
+
+  if (vr4300->cp0.regs.status.fr)
+    exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
+  else {
+    int32_t data = vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1];
+    exdcLatch->result.data = (int64_t) data;
+  }
+
+  exdcLatch->result.dest = rt;
+}
+
+/* ============================================================================
+ *  Instruction: MTC1 (Move To Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300MTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  unsigned fs = GET_FS(rfexLatch->iw);
+
+  if (!FPUCheckUsable(vr4300))
+    return;
+
+  if (vr4300->cp0.regs.status.fr)
+    vr4300->cp1.regs[fs].w.data[0] = rt;
+  else
+    vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1] = rt;
 }
 
 /* ============================================================================
@@ -1922,47 +1963,6 @@ VR4300MULs(struct VR4300 *vr4300) {
   }
 
   fd->s.data[0] = value;
-}
-
-/* ============================================================================
- *  Instruction: MFC1 (Move From Coprocessor 1)
- * ========================================================================= */
-void
-VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
-  unsigned fs = GET_FS(rfexLatch->iw);
-  unsigned rt = GET_RT(rfexLatch->iw);
-
-  if (!FPUCheckUsable(vr4300))
-    return;
-
-  if (vr4300->cp0.regs.status.fr)
-    exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
-  else {
-    int32_t data = vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1];
-    exdcLatch->result.data = (int64_t) data;
-  }
-
-  exdcLatch->result.dest = rt;
-}
-
-/* ============================================================================
- *  Instruction: MTC1 (Move To Coprocessor 1)
- * ========================================================================= */
-void
-VR4300MTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  unsigned fs = GET_FS(rfexLatch->iw);
-
-  if (!FPUCheckUsable(vr4300))
-    return;
-
-  if (vr4300->cp0.regs.status.fr)
-    vr4300->cp1.regs[fs].w.data[0] = rt;
-  else
-    vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1] = rt;
 }
 
 /* ============================================================================
