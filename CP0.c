@@ -133,7 +133,7 @@ VR4300MFC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
 
   unsigned rd = rfexLatch->iw >> 11 & 0x1F;
   unsigned dest = GET_RT(rfexLatch->iw);
-  uint64_t result;
+  int32_t result;
 
   switch((enum VR4300CP0RegisterID) rd) {
   case VR4300_CP0_REGISTER_INDEX:
@@ -199,7 +199,7 @@ VR4300MFC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
     dest = 0;
   }
 
-  exdcLatch->result.data = result;
+  exdcLatch->result.data = (int64_t) result;
   exdcLatch->result.dest = dest;
 }
 
