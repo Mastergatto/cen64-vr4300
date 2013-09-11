@@ -58,12 +58,6 @@ VR4300DCStage(struct VR4300 *vr4300) {
     dcwbLatch->region = region;
   }
 
-  /* Corner case: LDL/LDR/LWL/LWR only loads data into part of */
-  /* a register; it expects to find the rest of it in the target. */
-  vr4300->regs[0] = 0;
-
-  dcwbLatch->result.data = vr4300->regs[dcwbLatch->result.dest];
-
   /* TODO: Bypass the write buffers. */
   memoryData->address -= region->offset;
   function(memoryData, vr4300->bus);
