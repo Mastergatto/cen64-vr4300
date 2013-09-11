@@ -134,7 +134,7 @@ void
 VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  uint64_t address = ((int64_t) ((int16_t) rfexLatch->iw << 2)) - 4;
+  uint64_t address = (int64_t) ((int16_t) rfexLatch->iw << 2);
 
   if (rs != rt)
     return;
@@ -145,7 +145,7 @@ VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
       vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
 #endif
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -155,14 +155,14 @@ void
 VR4300BEQL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if (rs != rt) {
     icrfLatch->iwMask = 0;
     return;
   }
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -172,12 +172,12 @@ void
 VR4300BGEZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs < 0)
     return;
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -188,7 +188,7 @@ VR4300BGEZAL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   exdcLatch->result.data = icrfLatch->pc + 4;
   exdcLatch->result.dest = VR4300_REGISTER_RA;
@@ -196,7 +196,7 @@ VR4300BGEZAL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   if ((int64_t) rs < 0)
     return;
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -215,14 +215,14 @@ void
 VR4300BGEZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs < 0) {
     icrfLatch->iwMask = 0;
     return;
   }
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -232,12 +232,12 @@ void
 VR4300BGTZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs <= 0)
     return;
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -247,14 +247,14 @@ void
 VR4300BGTZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs <= 0) {
     icrfLatch->iwMask = 0;
     return;
   }
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -264,12 +264,12 @@ void
 VR4300BLEZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs > 0)
     return;
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -279,14 +279,14 @@ void
 VR4300BLEZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs > 0) {
     icrfLatch->iwMask = 0;
     return;
   }
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -296,12 +296,12 @@ void
 VR4300BLTZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs >= 0)
     return;
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -312,7 +312,7 @@ VR4300BLTZAL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   exdcLatch->result.data = icrfLatch->pc + 4;
   exdcLatch->result.dest = VR4300_REGISTER_RA;
@@ -320,7 +320,7 @@ VR4300BLTZAL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   if ((int64_t) rs >= 0)
     return;
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -339,14 +339,14 @@ void
 VR4300BLTZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if ((int64_t) rs >= 0) {
     icrfLatch->iwMask = 0;
     return;
   }
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -356,12 +356,12 @@ void
 VR4300BNE(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if (rs == rt)
     return;
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -371,14 +371,14 @@ void
 VR4300BNEL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = (int16_t) rfexLatch->iw << 2;
 
   if (rs == rt) {
     icrfLatch->iwMask = 0;
     return;
   }
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
@@ -487,8 +487,8 @@ VR4300DADDI(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
-  int16_t imm = (int16_t) rfexLatch->iw;
-  int64_t result = rs + (int64_t) imm;
+  int64_t imm = (int16_t) rfexLatch->iw;
+  int64_t result = rs + imm;
 
   exdcLatch->result.data = result;
   exdcLatch->result.dest = dest;
@@ -503,8 +503,8 @@ VR4300DADDIU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
 
   unsigned dest = GET_RT(rfexLatch->iw);
-  int16_t imm = (int16_t) rfexLatch->iw;
-  int64_t result = rs + (int64_t) imm;
+  int64_t imm = (int16_t) rfexLatch->iw;
+  int64_t result = rs + imm;
 
   exdcLatch->result.data = result;
   exdcLatch->result.dest = dest;
@@ -592,8 +592,8 @@ VR4300DIVU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
     uint64_t rs = (uint32_t) _rs;
     uint64_t rt = (uint32_t) _rt;
 
-    uint64_t div = (uint32_t) (rs / rt);
-    uint64_t mod = (uint32_t) (rs % rt);
+    int64_t div = (int32_t) (rs / rt);
+    int64_t mod = (int32_t) (rs % rt);
 
     vr4300->regs[VR4300_REGISTER_LO] = div;
     vr4300->regs[VR4300_REGISTER_HI] = mod;
@@ -644,8 +644,8 @@ VR4300DMULT(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
   uint64_t lo, hi;
 
 #if(defined(__GNUC__) && (defined(__x86__) || defined(__x86_64__)))
-  __int128_t rs = _rs;
-  __int128_t rt = _rt;
+  __int128_t rs = (int64_t) _rs;
+  __int128_t rt = (int64_t) _rt;
   __int128_t result;
 
   result = rs * rt;
@@ -919,6 +919,7 @@ VR4300JALR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdcLatch->result.data = icrfLatch->pc + 4;
   exdcLatch->result.dest = VR4300_REGISTER_RA;
 
+  assert((rs & 3) == 0);
   icrfLatch->pc = rs - 4;
 }
 
@@ -929,6 +930,8 @@ VR4300JALR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 void
 VR4300JR(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
+
+  assert((rs & 3) == 0);
   icrfLatch->pc = rs - 4;
 }
 
