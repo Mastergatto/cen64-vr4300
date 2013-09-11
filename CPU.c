@@ -224,7 +224,9 @@ MIRegWrite(void *_vr4300, uint32_t address, void *_data) {
 void
 VR4300ClearRCPInterrupt(struct VR4300 *vr4300, unsigned mask) {
   vr4300->miregs[MI_INTR_REG] &= ~mask;
-  CheckForRCPInterrupts(vr4300);
+
+  if (!(vr4300->miregs[MI_INTR_REG] & vr4300->miregs[MI_INTR_MASK_REG]))
+    vr4300->cp0.regs.cause.ip &= ~0x04;
 }
 
 /* ============================================================================
@@ -233,6 +235,8 @@ VR4300ClearRCPInterrupt(struct VR4300 *vr4300, unsigned mask) {
 void
 VR4300RaiseRCPInterrupt(struct VR4300 *vr4300, unsigned mask) {
   vr4300->miregs[MI_INTR_REG] |= mask;
-  CheckForRCPInterrupts(vr4300);
+
+  if (vr4300->miregs[MI_INTR_REG] & vr4300->miregs[MI_INTR_MASK_REG])
+    vr4300->cp0.regs.cause.ip |= 0x04;
 }
 
