@@ -1438,11 +1438,11 @@ VR4300CFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300CP1Control *control = &vr4300->cp1.control;
   unsigned rt = GET_RT(rfexLatch->iw); 
-  uint32_t result;
+  int32_t result;
 
 #ifndef NDEBUG
-  unsigned rd = GET_RD(rfexLatch->iw);
-  assert ((rd == 0 || rd == 31) && "Tried to read reserved CP1 register.");
+  unsigned fs = GET_FS(rfexLatch->iw);
+  assert ((fs == 31) && "Tried to read reserved CP1 register.");
 #endif
 
   if (!FPUCheckUsable(vr4300)) 
@@ -1456,7 +1456,7 @@ VR4300CFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   result |= control->fs << 24;
 
   exdcLatch->result.data = result;
-  exdcLatch->result.dest = rt;
+  exdcLatch->result.dest = (int64_t) rt;
 }
 
 /* ============================================================================
@@ -1486,9 +1486,9 @@ VR4300CTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
 #ifndef NDEBUG
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  unsigned rd = GET_RD(rfexLatch->iw);
+  unsigned fs = GET_FS(rfexLatch->iw);
 
-  assert(rd == 31 && "Tried to modify reserved CP1 register.");
+  assert(fs == 31 && "Tried to modify reserved CP1 register.");
 #endif
 
   if (!FPUCheckUsable(vr4300))
@@ -1500,6 +1500,7 @@ VR4300CTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   control->cause = rt >> 12 & 0x3F;
   control->c = rt >> 23 & 0x1;
   control->fs = rt >> 24 & 0x1;
+  control->coc = control->c;
 
   control->nativeCause = CTC1SimulatedToNative(control->cause);
   control->nativeEnables = CTC1SimulatedToNative(control->enables);
@@ -1787,14 +1788,11 @@ VR4300LDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.target = &vr4300->cp1.regs[ft].l.data;
-  else {
-    assert("VR4300LDC1: Don't support 32-bit fp registers.");
+  else
     exdcLatch->memoryData.target = &vr4300->cp1.regs[ft & 0x1E].l.data;
-  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadDWordFPU;
-  exdcLatch->result.dest = 0;
 }
 
 /* ============================================================================
@@ -1814,14 +1812,12 @@ VR4300LWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.target = &vr4300->cp1.regs[rt].w.data[0];
-  else {
-    unsigned order = rt & 0x1;
-    exdcLatch->memoryData.target = &vr4300->cp1.regs[rt & 0x1E].w.data[order];
-  }
+  else
+    exdcLatch->memoryData.target = &vr4300->cp1.
+      regs[rt & 0x1E].w.data[rt & 0x1];
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300LoadWordFPU;
-  exdcLatch->result.dest = 0;
 }
 
 /* ============================================================================
@@ -1945,8 +1941,8 @@ VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
   else {
-    unsigned order = fs & 0x1;
-    exdcLatch->result.data = vr4300->cp1.regs[fs & 0x1E].w.data[order];
+    int32_t data = vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1];
+    exdcLatch->result.data = (int64_t) data;
   }
 
   exdcLatch->result.dest = rt;
@@ -1958,17 +1954,15 @@ VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
 void
 VR4300MTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  unsigned rd = GET_RD(rfexLatch->iw);
+  unsigned fs = GET_FS(rfexLatch->iw);
 
   if (!FPUCheckUsable(vr4300))
     return;
 
   if (vr4300->cp0.regs.status.fr)
-    vr4300->cp1.regs[rd].w.data[0] = rt;
-  else {
-    unsigned order = rd & 0x1;
-    vr4300->cp1.regs[rd & 0x1E].w.data[order] = rt;
-  }
+    vr4300->cp1.regs[fs].w.data[0] = rt;
+  else
+    vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1] = rt;
 }
 
 /* ============================================================================
@@ -2054,10 +2048,8 @@ VR4300SDC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.data = vr4300->cp1.regs[ft].l.data;
-  else {
-    assert("VR4300SDC1: Don't support 32-bit fp registers.");
+  else
     exdcLatch->memoryData.data = vr4300->cp1.regs[ft & 0x1E].l.data;
-  }
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreDWord;
@@ -2218,10 +2210,8 @@ VR4300SWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   if (vr4300->cp0.regs.status.fr)
     exdcLatch->memoryData.data = vr4300->cp1.regs[ft].w.data[0];
-  else {
-    assert("VR4300SDC1: Don't support 32-bit fp registers.");
-    exdcLatch->memoryData.data = vr4300->cp1.regs[ft & 0x1E].l.data;
-  }
+  else
+    exdcLatch->memoryData.data = vr4300->cp1.regs[ft & 0x1E].w.data[ft & 0x1];
 
   exdcLatch->memoryData.address = address;
   exdcLatch->memoryData.function = &VR4300StoreWord;
