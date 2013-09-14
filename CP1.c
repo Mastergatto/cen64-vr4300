@@ -1700,6 +1700,30 @@ VR4300CVTws(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: DMFC1 (Doubleword Move From Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300DMFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  uint64_t result;
+
+  unsigned fs = GET_FS(rfexLatch->iw);
+  unsigned rt = GET_RT(rfexLatch->iw);
+
+  if (!FPUCheckUsable(vr4300))
+    return;
+
+  if (vr4300->cp0.regs.status.fr)
+    result = vr4300->cp1.regs[fs].d.data;
+  else
+    result = vr4300->cp1.regs[fs & 0x1E].d.data;
+
+  exdcLatch->result.data = result;
+  exdcLatch->result.dest = rt;
+}
+
+/* ============================================================================
  *  Instruction: DIV.d (Floating-Point Divide).
  * ========================================================================= */
 static void
@@ -1769,6 +1793,23 @@ VR4300DIVs(struct VR4300 *vr4300) {
   }
 
   fd->s.data[0] = value;
+}
+
+/* ============================================================================
+ *  Instruction: DMTC1 (Doubleword Move To Coprocessor 1)
+ * ========================================================================= */
+void
+VR4300DMTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  unsigned fs = GET_FS(rfexLatch->iw);
+
+  if (!FPUCheckUsable(vr4300))
+    return;
+
+  if (vr4300->cp0.regs.status.fr)
+    vr4300->cp1.regs[fs].d.data = rt;
+  else
+    vr4300->cp1.regs[fs & 0x1E].d.data = rt;
 }
 
 /* ============================================================================

@@ -601,30 +601,12 @@ VR4300DIVU(struct VR4300 *vr4300, uint64_t _rs, uint64_t _rt) {
 }
 
 /* ============================================================================
- *  Instruction: DMFC1 (Doubleword Move From Coprocessor 1)
- * ========================================================================= */
-void
-VR4300DMFC1(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DMFC1.");
-}
-
-/* ============================================================================
  *  Instruction: DMFC2 (Doubleword Move From Coprocessor 1)
  * ========================================================================= */
 void
 VR4300DMFC2(struct VR4300 *unused(vr4300),
   uint64_t unused(rs), uint64_t unused(rt)) {
   debug("Unimplemented function: DMFC2.");
-}
-
-/* ============================================================================
- *  Instruction: DMTC1 (Doubleword Move To Coprocessor 1)
- * ========================================================================= */
-void
-VR4300DMTC1(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: DMTC1.");
 }
 
 /* ============================================================================
