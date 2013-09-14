@@ -2267,7 +2267,7 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
   struct VR4300CP1 *cp1 = &vr4300->cp1;
 
   const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
-  unsigned fd = GET_FD(rfexLatch->iw);
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
   uint32_t value;
 
   FPUClearExceptions();
@@ -2277,7 +2277,7 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
     "fldl %1\n\t"
     "fisttpl %0\n\t"
     : "=m" (value)
-    : "m" (fs->l.data)
+    : "m" (fs->d.data)
     : "st"
   );
 #endif
@@ -2287,10 +2287,7 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
     return;
   }
 
-  if (vr4300->cp0.regs.status.fr)
-    cp1->regs[fd].w.data[0] = value;
-  else
-    cp1->regs[fd & 0x1E].w.data[fd & 0x1] = value;
+  fd->w.data[0] = value;
 }
 
 /* ============================================================================
@@ -2302,7 +2299,7 @@ VR4300TRUNCws(struct VR4300 *vr4300) {
   struct VR4300CP1 *cp1 = &vr4300->cp1;
 
   const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
-  unsigned fd = GET_FD(rfexLatch->iw);
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
   uint32_t value;
 
   FPUClearExceptions();
@@ -2322,10 +2319,7 @@ VR4300TRUNCws(struct VR4300 *vr4300) {
     return;
   }
 
-  if (vr4300->cp0.regs.status.fr)
-    cp1->regs[fd].w.data[0] = value;
-  else
-    cp1->regs[fd & 0x1E].w.data[fd & 0x1] = value;
+  fd->w.data[0] = value;
 }
 
 /* ============================================================================
