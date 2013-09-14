@@ -1715,9 +1715,9 @@ VR4300DMFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
     return;
 
   if (vr4300->cp0.regs.status.fr)
-    result = vr4300->cp1.regs[fs].d.data;
+    result = vr4300->cp1.regs[fs].l.data;
   else
-    result = vr4300->cp1.regs[fs & 0x1E].d.data;
+    result = vr4300->cp1.regs[fs & 0x1E].l.data;
 
   exdcLatch->result.data = result;
   exdcLatch->result.dest = rt;
@@ -1807,9 +1807,9 @@ VR4300DMTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     return;
 
   if (vr4300->cp0.regs.status.fr)
-    vr4300->cp1.regs[fs].d.data = rt;
+    vr4300->cp1.regs[fs].l.data = rt;
   else
-    vr4300->cp1.regs[fs & 0x1E].d.data = rt;
+    vr4300->cp1.regs[fs & 0x1E].l.data = rt;
 }
 
 /* ============================================================================
