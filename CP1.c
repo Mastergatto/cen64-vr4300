@@ -1654,7 +1654,7 @@ VR4300CVTwd(struct VR4300 *vr4300) {
     "fldl %1\n\t"
     "fistpl %0\n\t"
     : "=m" (value)
-    : "m" (fs->l.data)
+    : "m" (fs->d.data)
     : "st"
   );
 #endif
