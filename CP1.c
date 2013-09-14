@@ -567,7 +567,7 @@ VR4300Cngls(struct VR4300 *vr4300) {
     "flds %2\n\t"
     "fcomip\n\t"
     "setp %0\n\t"
-    "sete %0\n\t"
+    "sete %1\n\t"
     "fstp %%st(0)\n\t"
     : "=m" (un),
       "=m" (eq)
@@ -799,8 +799,8 @@ VR4300Cngts(struct VR4300 *vr4300) {
 
 #ifdef USE_X87FPU
   __asm__ volatile(
+    "flds %3\n\t"
     "flds %2\n\t"
-    "flds %1\n\t"
     "fcomip\n\t"
     "setp %0\n\t"
     "setbe %1\n\t"
@@ -840,8 +840,8 @@ VR4300Coled(struct VR4300 *vr4300) {
 
 #ifdef USE_X87FPU
   __asm__ volatile(
+    "fldl %3\n\t"
     "fldl %2\n\t"
-    "fldl %1\n\t"
     "fcomip\n\t"
     "setnp %0\n\t"
     "setbe %1\n\t"
@@ -876,8 +876,8 @@ VR4300Coles(struct VR4300 *vr4300) {
 
 #ifdef USE_X87FPU
   __asm__ volatile(
+    "flds %3\n\t"
     "flds %2\n\t"
-    "flds %1\n\t"
     "fcomip\n\t"
     "setnp %0\n\t"
     "setbe %1\n\t"
@@ -1868,7 +1868,7 @@ VR4300MFC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
     return;
 
   if (vr4300->cp0.regs.status.fr)
-    result = exdcLatch->result.data = vr4300->cp1.regs[fs].w.data[0];
+    result = vr4300->cp1.regs[fs].w.data[0];
   else
     result = vr4300->cp1.regs[fs & 0x1E].w.data[fs & 0x1];
 
@@ -2304,7 +2304,7 @@ VR4300BC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300CP1 *cp1 = &vr4300->cp1;
 
-  int64_t address = ((int16_t) rfexLatch->iw << 2) - 4;
+  int64_t address = ((int16_t) rfexLatch->iw) << 2;
 
   if (!FPUCheckUsable(vr4300))
     return;
@@ -2339,7 +2339,7 @@ VR4300BC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
       break;
   }
 
-  icrfLatch->pc += address;
+  icrfLatch->pc += address - 4;
 }
 
 /* ============================================================================
