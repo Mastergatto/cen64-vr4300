@@ -1873,8 +1873,8 @@ VR4300MOVd(struct VR4300 *vr4300) {
   union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
   double value;
 
-  value = fs->l.data;
-  fd->l.data = value;
+  value = fs->d.data;
+  fd->d.data = value;
 }
 
 /* ============================================================================
