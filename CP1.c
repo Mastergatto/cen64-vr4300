@@ -2269,23 +2269,19 @@ VR4300TRUNCwd(struct VR4300 *vr4300) {
   const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
   unsigned fd = GET_FD(rfexLatch->iw);
   uint32_t value;
-  int mode;
 
   FPUClearExceptions();
-  mode = fegetround();
-  fesetround(FE_TOWARDZERO);
 
 #ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
-    "fistpl %0\n\t"
+    "fisttpl %0\n\t"
     : "=m" (value)
     : "m" (fs->l.data)
     : "st"
   );
 #endif
 
-  fesetround(mode);
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
     return;
@@ -2308,23 +2304,19 @@ VR4300TRUNCws(struct VR4300 *vr4300) {
   const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
   unsigned fd = GET_FD(rfexLatch->iw);
   uint32_t value;
-  int mode;
 
   FPUClearExceptions();
-  mode = fegetround();
-  fesetround(FE_TOWARDZERO);
 
 #ifdef USE_X87FPU
   __asm__ volatile(
     "flds %1\n\t"
-    "fistpl %0\n\t"
+    "fisttpl %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0])
     : "st"
   );
 #endif
 
-  fesetround(mode);
   if (FPUUpdateState(cp1)) {
     FPURaiseException(vr4300);
     return;
