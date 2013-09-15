@@ -39,7 +39,7 @@ typedef void (*FPUOperation)(struct VR4300 *);
  * ========================================================================= */
 static int
 FPUCheckUsable(struct VR4300 *vr4300) {
-  const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
+  const struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
 
   /* The co-processor is likely marked usable. */
   if (likely(vr4300->cp0.regs.status.cu & 0x2))
@@ -47,7 +47,7 @@ FPUCheckUsable(struct VR4300 *vr4300) {
 
   /* Queue the exception up, prepare to kill stages. */
   QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_CPU,
-    vr4300->pipeline.rfexLatch.pc, opcode->flags, 1 /* COp ID */,
+    vr4300->pipeline.rfexLatch.pc, exdcLatch->result.flags, 1 /* COp ID */,
     VR4300_PIPELINE_STAGE_EX);
 
   return 0;

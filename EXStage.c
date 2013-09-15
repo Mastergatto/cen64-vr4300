@@ -1897,5 +1897,6 @@ VR4300EXStage(struct VR4300 *vr4300) {
 
   /* Invoke the appropriate functional unit. */
   VR4300FunctionTable[rfexLatch->opcode.id](vr4300, rs, rt);
+  exdcLatch->result.flags = rfexLatch->opcode.flags;
 }
 
