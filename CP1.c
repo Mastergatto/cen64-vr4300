@@ -151,7 +151,7 @@ VR4300ABSs(struct VR4300 *vr4300) {
   __asm__ volatile(
     "flds %1\n\t"
     "fabs\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0])
     : "st"
@@ -222,7 +222,7 @@ VR4300ADDs(struct VR4300 *vr4300) {
     "flds %1\n\t"
     "flds %2\n\t"
     "faddp\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0]),
       "m" (ft->s.data[0])
@@ -1588,7 +1588,7 @@ VR4300CVTsd(struct VR4300 *vr4300) {
 #ifdef USE_X87FPU
   __asm__ volatile(
     "fldl %1\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->d.data)
     : "st"
@@ -1620,7 +1620,7 @@ VR4300CVTsw(struct VR4300 *vr4300) {
 #ifdef USE_X87FPU
   __asm__ volatile(
     "fildl %1\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->w.data[0])
     : "st"
@@ -1779,7 +1779,7 @@ VR4300DIVs(struct VR4300 *vr4300) {
     "flds %1\n\t"
     "flds %2\n\t"
     "fdivrp\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0]),
       "m" (ft->s.data[0])
@@ -1990,7 +1990,7 @@ VR4300MULs(struct VR4300 *vr4300) {
     "flds %1\n\t"
     "flds %2\n\t"
     "fmulp\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0]),
       "m" (ft->s.data[0])
@@ -2057,7 +2057,7 @@ VR4300NEGs(struct VR4300 *vr4300) {
   __asm__ volatile(
     "flds %1\n\t"
     "fchs\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0])
     : "st"
@@ -2147,7 +2147,7 @@ VR4300SQRTs(struct VR4300 *vr4300) {
   __asm__ volatile(
     "flds %1\n\t"
     "fsqrt\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0])
     : "st"
@@ -2218,7 +2218,7 @@ VR4300SUBs(struct VR4300 *vr4300) {
     "flds %1\n\t"
     "flds %2\n\t"
     "fsubrp\n\t"
-    "fstp %0\n\t"
+    "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->s.data[0]),
       "m" (ft->s.data[0])
