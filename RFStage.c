@@ -76,7 +76,6 @@ VR4300RFStage(struct VR4300 *vr4300) {
     /* Do we need to fill the line? */
     if (unlikely(cacheData == NULL)) {
       VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
-      vr4300->pipeline.stalls = 100; /* TODO: Hack. */
 
       /* Now that it's cached, perform the probe again. */
       cacheData = VR4300ICacheProbe(&vr4300->icache, address);
@@ -93,8 +92,6 @@ VR4300RFStage(struct VR4300 *vr4300) {
     rfexLatch->opcode = *VR4300DecodeInstruction(iw);
     rfexLatch->opcode.id &= icrfLatch->iwMask;
     rfexLatch->iw = iw;
-
-    vr4300->pipeline.stalls = 100; /* TODO: Hack. */
   }
 
   /* Reset the mask. */
