@@ -1540,6 +1540,38 @@ VR4300CVTds(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: CVT.d.l: (Floating-Point Convert To Double Floating-Point).
+ * ========================================================================= */
+static void
+VR4300CVTdl(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  double value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fildq %1\n\t"
+    "fstpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->l.data)
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->d.data = value;
+}
+
+/* ============================================================================
  *  Instruction: CVT.d.w: (Floating-Point Convert To Double Floating-Point).
  * ========================================================================= */
 static void
@@ -1572,6 +1604,70 @@ VR4300CVTdw(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: CVT.l.d: (Floating-Point Convert To Double Fixed-Point).
+ * ========================================================================= */
+static void
+VR4300CVTld(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: CVT.l.s: (Floating-Point Convert To Single Fixed-Point).
+ * ========================================================================= */
+static void
+VR4300CVTls(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
  *  Instruction: CVT.s.d: (Floating-Point Convert To Single Floating-Point).
  * ========================================================================= */
 static void
@@ -1591,6 +1687,38 @@ VR4300CVTsd(struct VR4300 *vr4300) {
     "fstps %0\n\t"
     : "=m" (value)
     : "m" (fs->d.data)
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->s.data[0] = value;
+}
+
+/* ============================================================================
+ *  Instruction: CVT.s.l: (Floating-Point Convert To Single Floating-Point).
+ * ========================================================================= */
+static void
+VR4300CVTsl(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  float value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fildq %1\n\t"
+    "fstps %0\n\t"
+    : "=m" (value)
+    : "m" (fs->l.data)
     : "st"
   );
 #endif
@@ -2387,7 +2515,7 @@ static const FPUOperation fpudFunctions[64] = {
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300CVTsd,       VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
-  VR4300CVTwd,       VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
+  VR4300CVTwd,       VR4300CVTld,       VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300Cfd,         VR4300Cund,        VR4300Ceqd,        VR4300Cueqd,
@@ -2423,6 +2551,7 @@ static const FPUOperation fpulFunctions[64] = {
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
+  VR4300CVTsl,       VR4300CVTdl,       VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
@@ -2430,7 +2559,6 @@ static const FPUOperation fpulFunctions[64] = {
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
   VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid,
-  VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid, VR4300FPULInvalid
 };
 
 void
@@ -2461,7 +2589,7 @@ static const FPUOperation fpusFunctions[64] = {
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300CVTds,       VR4300FPUSInvalid, VR4300FPUSInvalid,
-  VR4300CVTws,       VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
+  VR4300CVTws,       VR4300CVTls,       VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300Cfs,         VR4300Cuns,        VR4300Ceqs,        VR4300Cueqs,
