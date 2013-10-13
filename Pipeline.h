@@ -56,14 +56,15 @@ struct VR4300DCWBLatch {
 };
 
 struct VR4300Pipeline {
-  unsigned cycles;
-  unsigned stalls;
+  unsigned stalls, padding;
 
   struct VR4300ICRFLatch icrfLatch;
   struct VR4300RFEXLatch rfexLatch;
   struct VR4300EXDCLatch exdcLatch;
   struct VR4300DCWBLatch dcwbLatch;
   struct VR4300FaultManager faultManager;
+
+  unsigned long long cycles;
 };
 
 struct VR4300;

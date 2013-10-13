@@ -171,6 +171,37 @@ IncrementCycleCounters(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  VR300DumpStatistics: Dumps instruction counts and other useful things.
+ * ========================================================================= */
+#ifndef NDEBUG
+void
+VR4300DumpStatistics(struct VR4300 *vr4300) {
+  unsigned long long total = 0;
+  unsigned i, j;
+
+  printf(" ======================== \n");
+  printf("  NEC VR4300 Statistics:  \n");
+  printf(" ======================== \n");
+
+  printf("\nInstruction counts:\n");
+  for (i = 0; i < NUM_VR4300_OPCODES; i += 4) {
+    for (j = i; j < i + 4 && j < NUM_VR4300_OPCODES; j++) {
+      printf("%7s: %10llu  ", VR4300OpcodeMnemonics[j],
+        VR4300OpcodeCounts[j]);
+
+      total += VR4300OpcodeCounts[j];
+    }
+
+    printf("\n");
+  }
+
+  printf("\n");
+  printf("Cycles: %llu\n", vr4300->pipeline.cycles);
+  printf("IPC: %.2f\n", (float) total / vr4300->pipeline.cycles);
+}
+#endif
+
+/* ============================================================================
  *  VR4300InitPipeline: Initializes the pipeline.
  * ========================================================================= */
 void
