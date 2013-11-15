@@ -1410,6 +1410,158 @@ VR4300Cuns(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: CEIL.l.d (Floating-Point Ceiling Convert To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300CEILld(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_UPWARD);
+
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: CEIL.l.s (Floating-Point Ceiling Convert To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300CEILls(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_UPWARD);
+
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: CEIL.w.d (Floating-Point Ceiling Convert To Single Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300CEILwd(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint32_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_UPWARD);
+
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->w.data[0] = value;
+}
+
+/* ============================================================================
+ *  Instruction: CEIL.w.s (Floating-Point Ceiling Convert To Single Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300CEILws(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint32_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_UPWARD);
+
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->w.data[0] = value;
+}
+
+/* ============================================================================
  *  Instruction: CFC1 (Move Control From Coprocessor 1)
  * ========================================================================= */
 static int
@@ -1941,6 +2093,158 @@ VR4300DMTC1(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 }
 
 /* ============================================================================
+ *  Instruction: FLOOR.l.d (Floating-Point Floor Convert To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300FLOORld(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_DOWNWARD);
+
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: FLOOR.l.s (Floating-Point Floor Convert To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300FLOORls(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_DOWNWARD);
+
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: FLOOR.w.d (Floating-Point Floor Convert To Single Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300FLOORwd(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint32_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_DOWNWARD);
+
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->w.data[0] = value;
+}
+
+/* ============================================================================
+ *  Instruction: FLOOR.w.s (Floating-Point Floor Convert To Single Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300FLOORws(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint32_t value;
+  int oldround;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  oldround = fegetround();
+  fesetround(FE_DOWNWARD);
+
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+
+  fesetround(oldround);
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->w.data[0] = value;
+}
+
+/* ============================================================================
  *  Instruction: LDC1 (Load Doubleword To Coprocessor 1)
  * ========================================================================= */
 void
@@ -2201,6 +2505,134 @@ VR4300NEGs(struct VR4300 *vr4300) {
 }
 
 /* ============================================================================
+ *  Instruction: ROUND.l.d (Floating-Point Round To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300ROUNDld(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: ROUND.l.s (Floating-Point Round To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300ROUNDls(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: ROUND.w.d (Floating-Point Round To Single Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300ROUNDwd(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint32_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->w.data[0] = value;
+}
+
+/* ============================================================================
+ *  Instruction: ROUND.w.s (Floating-Point Round To Single Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300ROUNDws(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint32_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fistpl %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->w.data[0] = value;
+}
+
+/* ============================================================================
  *  Instruction: SDC1 (Store Doubleword From Coprocessor 1)
  * ========================================================================= */
 void
@@ -2387,6 +2819,70 @@ VR4300SWC1(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 }
 
 /* ============================================================================
+ *  Instruction: TRUNC.l.d (Floating-Point Truncate To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300TRUNCld(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "fldl %1\n\t"
+    "fisttpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->d.data)
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
+ *  Instruction: TRUNC.l.s (Floating-Point Truncate To Double Fixed-Point)
+ * ========================================================================= */
+static void
+VR4300TRUNCls(struct VR4300 *vr4300) {
+  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300CP1 *cp1 = &vr4300->cp1;
+
+  const union VR4300CP1Register *fs = &cp1->regs[GET_FS(rfexLatch->iw)];
+  union VR4300CP1Register *fd = &cp1->regs[GET_FD(rfexLatch->iw)];
+  uint64_t value;
+
+  FPUClearExceptions();
+
+#ifdef USE_X87FPU
+  __asm__ volatile(
+    "flds %1\n\t"
+    "fisttpq %0\n\t"
+    : "=m" (value)
+    : "m" (fs->s.data[0])
+    : "st"
+  );
+#endif
+
+  if (FPUUpdateState(cp1)) {
+    FPURaiseException(vr4300);
+    return;
+  }
+
+  fd->l.data = value;
+}
+
+/* ============================================================================
  *  Instruction: TRUNC.w.d (Floating-Point Truncate To Single Fixed-Point)
  * ========================================================================= */
 static void
@@ -2508,8 +3004,8 @@ VR4300FPUDInvalid(struct VR4300 *unused(vr4300)) {
 static const FPUOperation fpudFunctions[64] = {
   VR4300ADDd,        VR4300SUBd,        VR4300MULd,        VR4300DIVd,
   VR4300SQRTd,       VR4300ABSd,        VR4300MOVd,        VR4300NEGd,
-  VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
-  VR4300FPUDInvalid, VR4300TRUNCwd,     VR4300FPUDInvalid, VR4300FPUDInvalid,
+  VR4300ROUNDld,     VR4300TRUNCld,     VR4300CEILld,      VR4300FLOORld,
+  VR4300ROUNDwd,     VR4300TRUNCwd,     VR4300CEILwd,      VR4300FLOORwd,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
   VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid, VR4300FPUDInvalid,
@@ -2582,8 +3078,8 @@ VR4300FPUSInvalid(struct VR4300 *unused(vr4300)) {
 static const FPUOperation fpusFunctions[64] = {
   VR4300ADDs,        VR4300SUBs,        VR4300MULs,        VR4300DIVs,
   VR4300SQRTs,       VR4300ABSs,        VR4300MOVs,        VR4300NEGs,
-  VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
-  VR4300FPUSInvalid, VR4300TRUNCws,     VR4300FPUSInvalid, VR4300FPUSInvalid,
+  VR4300ROUNDls,     VR4300TRUNCls,     VR4300CEILls,      VR4300FLOORls,
+  VR4300ROUNDws,     VR4300TRUNCws,     VR4300CEILws,      VR4300FLOORws,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
   VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid, VR4300FPUSInvalid,
