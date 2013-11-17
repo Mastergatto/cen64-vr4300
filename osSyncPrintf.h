@@ -35,13 +35,12 @@ static int osSyncPrintf(const struct VR4300 *vr4300, uint32_t address) {
   unsigned i, a;
 
   memset(args, 0, sizeof(args));
-  args[0] = vr4300->regs[VR4300_REGISTER_A0];
-  args[1] = vr4300->regs[VR4300_REGISTER_A1];
-  args[2] = vr4300->regs[VR4300_REGISTER_A2];
-  args[3] = vr4300->regs[VR4300_REGISTER_A3];
+  args[0] = vr4300->regs[VR4300_REGISTER_A1];
+  args[1] = vr4300->regs[VR4300_REGISTER_A2];
+  args[2] = vr4300->regs[VR4300_REGISTER_A3];
   a = 36; /* start @ $sp + 36? */
 
-  for (i = 4; i < 16; i++) {
+  for (i = 3; i < 16; i++) {
     MemoryFunction read;
     void *opaque;
     int s;
