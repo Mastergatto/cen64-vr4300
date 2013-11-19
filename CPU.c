@@ -13,6 +13,7 @@
 #include "CP0.h"
 #include "CP1.h"
 #include "CPU.h"
+#include "DCache.h"
 #include "Fault.h"
 #include "ICache.h"
 #include "TLBTree.h"
@@ -75,6 +76,7 @@ CheckForRCPInterrupts(struct VR4300 *vr4300) {
  * ========================================================================= */
 void
 ConnectVR4300ToBus(struct VR4300 *vr4300, struct BusController *bus) {
+  vr4300->dcache.bus = bus;
   vr4300->bus = bus;
 }
 
@@ -114,6 +116,7 @@ InitVR4300(struct VR4300 *vr4300) {
   vr4300->bus = NULL;
   VR4300InitCP0(&vr4300->cp0);
   VR4300InitCP1(&vr4300->cp1);
+  VR4300InitDCache(&vr4300->dcache);
   VR4300InitICache(&vr4300->icache);
   VR4300InitTLB(&vr4300->tlb);
   VR4300InitPipeline(&vr4300->pipeline);

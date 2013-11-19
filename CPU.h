@@ -13,6 +13,7 @@
 #include "Common.h"
 #include "CP0.h"
 #include "CP1.h"
+#include "DCache.h"
 #include "Externs.h"
 #include "ICache.h"
 #include "Pipeline.h"
@@ -56,6 +57,7 @@ struct VR4300 {
 
   struct VR4300TLB tlb;
   struct VR4300ICache icache;
+  struct VR4300DCache dcache;
 
   struct BusController *bus;
   struct VR4300CP0 cp0;

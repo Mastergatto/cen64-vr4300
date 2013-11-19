@@ -43,11 +43,11 @@ ProduceLatchOutputs(uint32_t iwMask,
        { 0,  0,  0,  0}};
 
     assert(sizeof(*cacheData) == 16);
-    __m128i data = _mm_load_si128((__m128i*) cacheData);
+    __m128i data = _mm_loadu_si128((__m128i*) cacheData);
     __m128i mask = _mm_load_si128((__m128i*) maskTable[index]);
 
     data = _mm_and_si128(data, mask);
-    _mm_store_si128((__m128i*) &rfexLatch->opcode, data);
+    _mm_storeu_si128((__m128i*) &rfexLatch->opcode, data);
 #else
     rfexLatch->iw = cacheData->word & iwMask;
     rfexLatch->opcode.id = cacheData->opcode.id & iwMask;
