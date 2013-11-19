@@ -400,6 +400,7 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   int16_t imm = rfexLatch->iw & 0xFFFF;
   uint64_t address = rs + (int64_t) imm;
+  unsigned op;
 
   /* Perform address translation to get address. */
   if ((region = GetRegionInfo(vr4300, address)) == NULL) {
@@ -416,6 +417,29 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
       break;
 
     case 1:
+      op = rfexLatch->iw >> 18 & 0x7;
+
+      if (op == 0) {
+        VR4300DCacheFill(&vr4300->dcache, address);
+        vr4300->dcache.valid[(address >> 4) & 0x1FF] = false;
+      }
+
+      else if (op == 4) {
+        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (address >> 4))
+          vr4300->dcache.valid[(address >> 4) & 0x1FF] = false;
+      }
+
+      /* This is NOT correct. */
+      else if (op == 5 || op == 6) {
+        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (address >> 4))
+          VR4300DCacheFill(&vr4300->dcache, address);
+      }
+
+      else {
+        debugarg("Unimplemented CACHE op: %d.", op);
+        assert(0);
+      }
+
       break;
 
     case 2:

@@ -81,7 +81,12 @@ VR4300LoadByte(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0xF), sizeof(contents));
     result = contents;
   }
@@ -112,7 +117,12 @@ VR4300LoadByteU(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0xF), sizeof(contents));
     result = contents;
   }
@@ -143,9 +153,14 @@ VR4300LoadDWord(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0x8), sizeof(contents));
-    result = contents;
+    result = ByteOrderSwap64(contents);
   }
 
   else {
@@ -244,8 +259,14 @@ VR4300LoadHWord(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0xE), sizeof(contents));
+    contents = ByteOrderSwap16(contents);
     result = contents;
   }
 
@@ -275,8 +296,14 @@ VR4300LoadHWordU(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0xE), sizeof(contents));
+    contents = ByteOrderSwap16(contents);
     result = contents;
   }
 
@@ -307,8 +334,14 @@ VR4300LoadWord(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0xC), sizeof(contents));
+    contents = ByteOrderSwap32(contents);
     result = contents;
   }
 
@@ -338,8 +371,14 @@ VR4300LoadWordFPU(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0xC), sizeof(contents));
+    contents = ByteOrderSwap32(contents);
     result = contents;
   }
 
@@ -369,8 +408,14 @@ VR4300LoadWordU(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(&contents, line->data + (address & 0xC), sizeof(contents));
+    contents = ByteOrderSwap32(contents);
     result = contents;
   }
 
@@ -477,8 +522,14 @@ VR4300StoreByte(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
     memcpy(line->data + (address & 0xF), &contents, sizeof(contents));
+  }
 
   else {
     if ((write = BusWrite(dcache->bus, BUS_TYPE_BYTE,
@@ -502,8 +553,15 @@ VR4300StoreDWord(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
+    contents = ByteOrderSwap64(contents);
     memcpy(line->data + (address & 0x8), &contents, sizeof(contents));
+  }
 
   else {
     if ((write = BusWrite(dcache->bus, BUS_TYPE_DWORD,
@@ -578,8 +636,15 @@ VR4300StoreHWord(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
+    contents = ByteOrderSwap16(contents);
     memcpy(line->data + (address & 0xE), &contents, sizeof(contents));
+  }
 
   else {
     if ((write = BusWrite(dcache->bus, BUS_TYPE_HWORD,
@@ -603,8 +668,15 @@ VR4300StoreWord(const struct VR4300MemoryData *memoryData,
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached) {
+    if ((line = VR4300DCacheProbe(dcache, address)) == NULL) {
+      VR4300DCacheFill(dcache, address);
+      line = VR4300DCacheProbe(dcache, address);
+    }
+
+    contents = ByteOrderSwap32(contents);
     memcpy(line->data + (address & 0xC), &contents, sizeof(contents));
+  }
 
   else {
     if ((write = BusWrite(dcache->bus, BUS_TYPE_WORD,

@@ -28,16 +28,33 @@ void VR4300DCacheFill(struct VR4300DCache *dcache, uint32_t paddr) {
   unsigned ppo = paddr >> 4;
   unsigned i;
 
-  /* Mark the line as valid. */
   struct VR4300DCacheLine *line = dcache->lines + lineIdx;
+  paddr &= 0xFFFFFFF0;
+
+  /* If the line is currently valid, flush it out. */
+  if (dcache->valid[lineIdx]) {
+    MemoryFunction write;
+    uint32_t wraddr;
+    void *opaque;
+
+    wraddr = line->tag << 4;
+    write = BusWrite(dcache->bus, BUS_TYPE_WORD, wraddr, &opaque);
+
+    for (i = 0; i < 16; i += 4) {
+      uint32_t word;
+      memcpy(&word, line->data + i, sizeof(word));
+      word = ByteOrderSwap32(word);
+      write(opaque, wraddr + i, &word);
+    }
+  }
+
+  /* Mark the line as valid. */
   dcache->valid[lineIdx] = true;
   line->tag = ppo;
 
   /* And fill it entirely. */
-  paddr &= 0xFFFFFFF0;
-
-  for (i = paddr ; i < (paddr + 16); i += 4) {
-    uint32_t word = BusReadWord(dcache->bus, i);
+  for (i = 0 ; i < 16; i += 4) {
+    uint32_t word = ByteOrderSwap32(BusReadWord(dcache->bus, paddr + i));
     memcpy(line->data + i, &word, sizeof(word));
   }
 }
