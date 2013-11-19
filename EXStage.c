@@ -400,6 +400,7 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   int16_t imm = rfexLatch->iw & 0xFFFF;
   uint64_t address = rs + (int64_t) imm;
+  uint32_t paddr;
   unsigned op;
 
   /* Perform address translation to get address. */
@@ -409,6 +410,7 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   }
 
   address -= region->offset;
+  paddr = address;
 
   switch (rfexLatch->iw >> 16 & 0x3) {
     case 0:
@@ -425,13 +427,21 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
       }
 
       else if (op == 4) {
-        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (address >> 4))
+        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (paddr >> 4))
           vr4300->dcache.valid[(address >> 4) & 0x1FF] = false;
       }
 
-      /* This is NOT correct. */
-      else if (op == 5 || op == 6) {
-        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (address >> 4))
+      /* This is NOT correct; needs to do it only when dirty. */
+      else if (op == 5 && vr4300->dcache.valid[(address >> 4) & 0x1FF]) {
+        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (paddr >> 4)) {
+          VR4300DCacheFill(&vr4300->dcache, address);
+          vr4300->dcache.valid[(address >> 4) & 0x1FF] = false;
+        }
+      }
+
+      /* This is NOT correct; needs to do it only when dirty. */
+      else if (op == 6 && vr4300->dcache.valid[(address >> 4) & 0x1FF]) {
+        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (paddr >> 4))
           VR4300DCacheFill(&vr4300->dcache, address);
       }
 
