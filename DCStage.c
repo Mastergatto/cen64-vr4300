@@ -34,8 +34,10 @@ VR4300DCStage(struct VR4300 *vr4300) {
   struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
   struct VR4300DCWBLatch *dcwbLatch = &vr4300->pipeline.dcwbLatch;
   struct VR4300MemoryData *memoryData = &exdcLatch->memoryData;
-  VR4300MemoryFunction function = memoryData->function;
+  struct VR4300DCache *dcache = &vr4300->dcache;
   const struct RegionInfo *region;
+
+  VR4300MemoryFunction function = memoryData->function;
 
   /* Always copy the destination register. */
   dcwbLatch->result.dest = exdcLatch->result.dest;
@@ -61,15 +63,15 @@ VR4300DCStage(struct VR4300 *vr4300) {
 
   /* TODO: Bypass the write buffers. */
   memoryData->address -= region->offset;
-  function(memoryData, &vr4300->dcache);
+  function(memoryData, dcache, region->cached);
 }
 
 /* ============================================================================
  *  VR4300LoadByte: Reads a byte from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadByte(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadByte(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -79,7 +81,7 @@ VR4300LoadByte(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0xF), sizeof(contents));
     result = contents;
   }
@@ -99,8 +101,8 @@ VR4300LoadByte(
  *  VR4300LoadByteU: Reads a byte from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadByteU(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadByteU(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -110,7 +112,7 @@ VR4300LoadByteU(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0xF), sizeof(contents));
     result = contents;
   }
@@ -130,8 +132,8 @@ VR4300LoadByteU(
  *  VR4300LoadDWord: Reads a doubleword from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadDWord(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadDWord(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -141,7 +143,7 @@ VR4300LoadDWord(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0x8), sizeof(contents));
     result = contents;
   }
@@ -172,8 +174,8 @@ static const uint64_t LoadDWordLeftMaskTable[8] = {
 };
 
 void
-VR4300LoadDWordLeft(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadDWordLeft(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address & 0xFFFFFFF8;
   unsigned type = memoryData->address & 0x7;
   uint64_t mask = LoadDWordLeftMaskTable[type];
@@ -207,8 +209,8 @@ static const uint64_t LoadDWordRightMaskTable[8] = {
 };
 
 void
-VR4300LoadDWordRight(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadDWordRight(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address & 0xFFFFFFF8;
   unsigned type = memoryData->address & 0x7;
   uint64_t mask = LoadDWordRightMaskTable[type];
@@ -231,8 +233,8 @@ VR4300LoadDWordRight(
  *  VR4300LoadHWord: Reads a halfword from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadHWord(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadHWord(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -242,7 +244,7 @@ VR4300LoadHWord(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0xE), sizeof(contents));
     result = contents;
   }
@@ -262,8 +264,8 @@ VR4300LoadHWord(
  *  VR4300LoadHWordU: Reads a halfword from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadHWordU(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadHWordU(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -273,7 +275,7 @@ VR4300LoadHWordU(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0xE), sizeof(contents));
     result = contents;
   }
@@ -294,8 +296,8 @@ VR4300LoadHWordU(
  *  VR4300LoadWord: Reads a word from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadWord(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadWord(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -305,7 +307,7 @@ VR4300LoadWord(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0xC), sizeof(contents));
     result = contents;
   }
@@ -325,8 +327,8 @@ VR4300LoadWord(
  *  VR4300LoadWordFPU: Reads a word from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadWordFPU(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadWordFPU(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -336,7 +338,7 @@ VR4300LoadWordFPU(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0xC), sizeof(contents));
     result = contents;
   }
@@ -356,8 +358,8 @@ VR4300LoadWordFPU(
  *  VR4300LoadWordU: Reads a word from the DCache/Bus.
  * ========================================================================= */
 void
-VR4300LoadWordU(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadWordU(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   struct VR4300DCacheLine *line;
   MemoryFunction read;
@@ -367,7 +369,7 @@ VR4300LoadWordU(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL) {
     memcpy(&contents, line->data + (address & 0xC), sizeof(contents));
     result = contents;
   }
@@ -394,8 +396,8 @@ static const uint32_t LoadWordLeftMaskTable[4] = {
 };
 
 void
-VR4300LoadWordLeft(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadWordLeft(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address & 0xFFFFFFFC;
   unsigned type = memoryData->address & 0x3;
   uint32_t mask = LoadWordLeftMaskTable[type];
@@ -429,8 +431,8 @@ static const uint32_t LoadWordRightMaskTable[4] = {
 };
 
 void
-VR4300LoadWordRight(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300LoadWordRight(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address & 0xFFFFFFFC;
   unsigned type = memoryData->address & 0x3;
   uint64_t mask = LoadWordRightMaskTable[type];
@@ -466,8 +468,8 @@ VR4300LoadWordRight(
  *  VR4300StoreByte: Writes a byte to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreByte(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreByte(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   uint8_t contents = memoryData->data;
   struct VR4300DCacheLine *line;
@@ -475,7 +477,7 @@ VR4300StoreByte(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
     memcpy(line->data + (address & 0xF), &contents, sizeof(contents));
 
   else {
@@ -491,8 +493,8 @@ VR4300StoreByte(
  *  VR4300StoreDWord: Writes a doubleword to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreDWord(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreDWord(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   uint64_t contents = memoryData->data;
   struct VR4300DCacheLine *line;
@@ -500,7 +502,7 @@ VR4300StoreDWord(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
     memcpy(line->data + (address & 0x8), &contents, sizeof(contents));
 
   else {
@@ -516,8 +518,8 @@ VR4300StoreDWord(
  *  VR4300StoreDWordLeft: Writes a doubleword to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreDWordLeft(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreDWordLeft(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   uint64_t contents = memoryData->data;
   struct UnalignedData data;
@@ -541,8 +543,8 @@ VR4300StoreDWordLeft(
  *  VR4300DStoreWordRight: Writes a doubleword to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreDWordRight(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreDWordRight(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address & 0xFFFFFFF8;
   uint64_t contents = memoryData->data;
   struct UnalignedData data;
@@ -567,8 +569,8 @@ VR4300StoreDWordRight(
  *  VR4300StoreHWord: Writes a halfword to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreHWord(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreHWord(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   uint16_t contents = memoryData->data;
   struct VR4300DCacheLine *line;
@@ -576,7 +578,7 @@ VR4300StoreHWord(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
     memcpy(line->data + (address & 0xE), &contents, sizeof(contents));
 
   else {
@@ -592,8 +594,8 @@ VR4300StoreHWord(
  *  VR4300StoreWord: Writes a word to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreWord(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreWord(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   uint32_t contents = memoryData->data;
   struct VR4300DCacheLine *line;
@@ -601,7 +603,7 @@ VR4300StoreWord(
   void *opaque;
 
   /* If the address is in a cacheable region and we hit in the cache... */
-  if (dcache != NULL && (line = VR4300DCacheProbe(dcache, address)) != NULL)
+  if (cached && (line = VR4300DCacheProbe(dcache, address)) != NULL)
     memcpy(line->data + (address & 0xC), &contents, sizeof(contents));
 
   else {
@@ -617,8 +619,8 @@ VR4300StoreWord(
  *  VR4300StoreWordLeft: Writes a word to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreWordLeft(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreWordLeft(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address;
   uint32_t contents = memoryData->data;
   struct UnalignedData data;
@@ -642,8 +644,8 @@ VR4300StoreWordLeft(
  *  VR4300StoreWordRight: Writes a word to the DCache/Bus.
  * ========================================================================= */
 void
-VR4300StoreWordRight(
-  const struct VR4300MemoryData *memoryData, struct VR4300DCache *dcache) {
+VR4300StoreWordRight(const struct VR4300MemoryData *memoryData,
+  struct VR4300DCache *dcache, bool cached) {
   uint32_t address = memoryData->address & 0xFFFFFFFC;
   uint32_t contents = memoryData->data;
   struct UnalignedData data;
