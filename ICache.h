@@ -16,11 +16,12 @@
 
 struct VR4300ICacheLineData {
   struct VR4300Opcode opcode;
-  uint32_t word, tag;
+  uint32_t word, padding;
 };
 
 struct VR4300ICacheLine {
   struct VR4300ICacheLineData data[8];
+  uint32_t tag;
 };
 
 struct VR4300ICache {

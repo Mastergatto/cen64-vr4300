@@ -396,12 +396,15 @@ VR4300BREAK(struct VR4300 *unused(vr4300),
 void
 VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
+  struct VR4300ICache *icache = &vr4300->icache;
+  struct VR4300DCache *dcache = &vr4300->dcache;
+  struct VR4300CP0 *cp0 = &vr4300->cp0;
   const struct RegionInfo *region;
 
   int16_t imm = rfexLatch->iw & 0xFFFF;
   uint64_t address = rs + (int64_t) imm;
+  unsigned cache, op, idx;
   uint32_t paddr;
-  unsigned op;
 
   /* Perform address translation to get address. */
   if ((region = GetRegionInfo(vr4300, address)) == NULL) {
@@ -409,53 +412,80 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     return;
   }
 
+  cache = rfexLatch->iw >> 16 & 0x3;
+  op = rfexLatch->iw >> 18 & 0x7;
   address -= region->offset;
   paddr = address;
 
-  switch (rfexLatch->iw >> 16 & 0x3) {
-    case 0:
-      /* TODO: Hack, just invalidate the ICache line for now. */
-      vr4300->icache.valid[(address >> 5) & 0x1FF] = false;
-      break;
+  if (cache == 0) {
+    idx = (address >> 5) & 0x1FF;
 
-    case 1:
-      op = rfexLatch->iw >> 18 & 0x7;
+    switch(op) {
+      case 0: /* Index_Invalidate */
+        icache->valid[idx] = 0;
+        break;
 
-      if (op == 0) {
-        VR4300DCacheFill(&vr4300->dcache, address);
-        vr4300->dcache.valid[(address >> 4) & 0x1FF] = false;
-      }
+      case 1: /* Index_Load_Tag */
+        cp0->regs.tagLo.pState = icache->valid[idx] << 1;
+        cp0->regs.tagLo.pTagLo = icache->lines[idx].tag;
+        break;
 
-      else if (op == 4) {
-        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (paddr >> 4))
-          vr4300->dcache.valid[(address >> 4) & 0x1FF] = false;
-      }
+      case 2: /* Index_Store_Tag */
+        icache->valid[idx] = cp0->regs.tagLo.pState >> 1;
+        icache->lines[idx].tag = cp0->regs.tagLo.pTagLo;
+        break;
 
-      /* This is NOT correct; needs to do it only when dirty. */
-      else if (op == 5 && vr4300->dcache.valid[(address >> 4) & 0x1FF]) {
-        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (paddr >> 4)) {
-          VR4300DCacheFill(&vr4300->dcache, address);
-          vr4300->dcache.valid[(address >> 4) & 0x1FF] = false;
-        }
-      }
+      case 4: /* Hit_Invalidate */
+        if (icache->lines[idx].tag == (paddr >> 12))
+          icache->valid[idx] = 0;
+        break;
 
-      /* This is NOT correct; needs to do it only when dirty. */
-      else if (op == 6 && vr4300->dcache.valid[(address >> 4) & 0x1FF]) {
-        if (vr4300->dcache.lines[(address >> 4) & 0x1FF].tag == (paddr >> 4))
-          VR4300DCacheFill(&vr4300->dcache, address);
-      }
+      case 5: /* Fill */
+        VR4300ICacheFill(icache, vr4300->bus, address);
+        break;
 
-      else {
-        debugarg("Unimplemented CACHE op: %d.", op);
+      case 6:
+        debug("Unimplemented ICACHE: Hit_Write_Back.");
         assert(0);
+        break;
+    }
+  }
+
+  else if (cache == 1) {
+    idx = (address >> 4) & 0x1FF;
+
+    if (op == 0) {
+      VR4300DCacheFill(dcache, address);
+      dcache->valid[idx] = false;
+    }
+
+    else if (op == 4) {
+      if (dcache->lines[idx].tag == (paddr >> 4))
+        dcache->valid[idx] = false;
+    }
+
+    /* This is NOT correct; needs to do it only when dirty. */
+    else if (op == 5 && dcache->valid[idx]) {
+      if (dcache->lines[idx].tag == (paddr >> 4)) {
+        VR4300DCacheFill(dcache, address);
+        dcache->valid[idx] = false;
       }
+    }
 
-      break;
+    /* This is NOT correct; needs to do it only when dirty. */
+    else if (op == 6 && dcache->valid[idx]) {
+      if (dcache->lines[idx].tag == (paddr >> 4))
+        VR4300DCacheFill(dcache, address);
+    }
 
-    case 2:
-    case 3:
-      debug("Reserved CACHE operation.");
-      break;
+    else {
+      debugarg("Unimplemented DCACHE: %d.", op);
+      assert(0);
+    }
+  }
+
+  else {
+    debug("Reserved CACHE instruction.");
   }
 }
 
