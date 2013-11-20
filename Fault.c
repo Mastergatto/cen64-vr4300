@@ -112,8 +112,8 @@ QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
 
   assert(pcuIndex != VR4300_PCU_NORMAL);
 
-  /* Higher priority ready? */
-  if (fault < manager->fault)
+  /* Higher priority ready? (Later pipeline stages have priority) */
+  if (manager->fault != VR4300_FAULT_INV && fault > manager->fault)
     return;
 
   manager->faultingPC = faultingPC;
