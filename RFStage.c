@@ -11,6 +11,7 @@
 #include "Common.h"
 #include "CPU.h"
 #include "Externs.h"
+#include "Fault.h"
 #include "ICache.h"
 #include "Pipeline.h"
 
@@ -71,10 +72,12 @@ VR4300RFStage(struct VR4300 *vr4300) {
 
     /* Do we need to fill the line? */
     if (unlikely(cacheData == NULL)) {
-      VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
+      QueueInterlock(&vr4300->pipeline, VR4300_FAULT_ICB,
+        address, VR4300_PCU_RESUME_RF);
 
-      /* Now that it's cached, perform the probe again. */
-      cacheData = VR4300ICacheProbe(&vr4300->icache, address);
+      /* TODO: XXX: Might want to still invalidate the RF/EX latch */
+      /*            outputs here. Shouldn't cause an issue though... */
+      return;
     }
 
     ProduceLatchOutputs(icrfLatch->iwMask, cacheData, rfexLatch);
@@ -90,7 +93,7 @@ VR4300RFStage(struct VR4300 *vr4300) {
     rfexLatch->iw = iw;
   }
 
-  /* Forward/update the PC. */
+  /* Forward and update the PC. */
   rfexLatch->pc = icrfLatch->pc;
   icrfLatch->pc += 4;
 

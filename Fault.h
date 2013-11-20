@@ -20,6 +20,7 @@ enum VR4300PipelineFault {
 };
 
 struct VR4300;
+struct VR4300Pipeline;
 
 enum VR4300PCUIndex {
   VR4300_PCU_NORMAL = -1,
@@ -49,8 +50,13 @@ extern const char *VR4300FaultMnemonics[NUM_VR4300_FAULTS];
 #endif
 
 void InitFaultManager(struct VR4300FaultManager *manager);
-
 void HandleFaults(struct VR4300 *vr4300);
+void HandleInterlocks(struct VR4300 *vr4300);
+
+void QueueInterlock(struct VR4300Pipeline *pipeline,
+  enum VR4300PipelineFault fault, uint32_t faultCauseData,
+  enum VR4300PCUIndex pcuIndex);
+
 void QueueFault(struct VR4300FaultManager *manager,
   enum VR4300PipelineFault fault, uint64_t faultingPC,
   uint32_t nextOpcodeFlags, uint32_t faultCauseData,

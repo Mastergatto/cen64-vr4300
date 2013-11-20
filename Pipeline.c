@@ -105,12 +105,14 @@ CycleVR4300(struct VR4300 *vr4300) {
     VR4300EXStage(vr4300);
     VR4300RFStage(vr4300);
     VR4300ICStage(vr4300);
+
+    if (vr4300->pipeline.faultManager.pcuIndex < 0)
+      CheckForPendingInterrupts(vr4300);
   }
 
   else
     CycleVR4300Short[vr4300->pipeline.faultManager.pcuIndex](vr4300);
 
-  CheckForPendingInterrupts(vr4300);
   IncrementCycleCounters(vr4300);
 }
 
@@ -119,7 +121,7 @@ CycleVR4300(struct VR4300 *vr4300) {
  *  The processor previously interlocked in IC; restart from here.
  * ========================================================================= */
 static void CycleVR4300_ResumeIC(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+  HandleInterlocks(vr4300);
 
   VR4300ICStage(vr4300);
 }
@@ -129,7 +131,7 @@ static void CycleVR4300_ResumeIC(struct VR4300 *vr4300) {
  *  The processor previously interlocked in IC; restart from here.
  * ========================================================================= */
 static void CycleVR4300_ResumeRF(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+  HandleInterlocks(vr4300);
 
   VR4300RFStage(vr4300);
   VR4300ICStage(vr4300);
@@ -140,7 +142,11 @@ static void CycleVR4300_ResumeRF(struct VR4300 *vr4300) {
  *  The processor previously interlocked in IC; restart from here.
  * ========================================================================= */
 static void CycleVR4300_ResumeEX(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+  HandleInterlocks(vr4300);
+
+  VR4300EXStage(vr4300);
+  VR4300RFStage(vr4300);
+  VR4300ICStage(vr4300);
 }
 
 /* ============================================================================
@@ -148,7 +154,7 @@ static void CycleVR4300_ResumeEX(struct VR4300 *vr4300) {
  *  The processor previously interlocked in IC; restart from here.
  * ========================================================================= */
 static void CycleVR4300_ResumeDC(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+  HandleInterlocks(vr4300);
 
   VR4300DCStage(vr4300);
   VR4300EXStage(vr4300);
@@ -200,7 +206,9 @@ CycleVR4300_StartDC(struct VR4300 *vr4300) {
  * ========================================================================= */
 #ifdef DO_FASTFORWARD
 static void
-FastForward(struct VR4300 *unused(vr4300)) {}
+FastForward(struct VR4300 *vr4300) {
+  CheckForPendingInterrupts(vr4300);
+}
 #endif
 
 /* ============================================================================

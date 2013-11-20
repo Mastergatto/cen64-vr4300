@@ -12,6 +12,7 @@
 #include "CP0.h"
 #include "CPU.h"
 #include "Fault.h"
+#include "ICache.h"
 #include "Pipeline.h"
 
 #ifdef __cplusplus
@@ -112,7 +113,7 @@ QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
 
   assert(pcuIndex != VR4300_PCU_NORMAL);
 
-  /* Higher priority ready? (Later pipeline stages have priority) */
+  /* Higher priority fault ready? (Later pipeline stages have priority) */
   if (manager->fault != VR4300_FAULT_INV && fault > manager->fault)
     return;
 
@@ -122,6 +123,28 @@ QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
 
   manager->pcuIndex = pcuIndex;
   manager->fault = fault;
+}
+
+/* ============================================================================
+ *  QueueInterlock: Queues up an interlock condition in a prioritized fashion.
+ * ========================================================================= */
+void
+QueueInterlock(struct VR4300Pipeline *pipeline, enum VR4300PipelineFault fault,
+  uint32_t faultCauseData, enum VR4300PCUIndex pcuIndex) {
+  struct VR4300FaultManager *manager = &pipeline->faultManager;
+  assert(pcuIndex != VR4300_PCU_NORMAL);
+
+  /* Higher priority fault ready? (Later pipeline stages have priority) */
+  if (manager->fault != VR4300_FAULT_INV && fault > manager->fault)
+    return;
+
+  manager->faultCauseData = faultCauseData;
+  manager->pcuIndex = pcuIndex;
+  manager->fault = fault;
+
+  /* TODO: Load this value from a table. */
+  /* Right now, we just assume this is ICB. */
+  pipeline->stalls = 26;
 }
 
 /* ============================================================================
@@ -232,8 +255,9 @@ VR4300FaultIBE(struct VR4300 *unused(vr4300)) {
  *  VR4300FaultICB: Instruction Cache Busy Interlock.
  * ========================================================================= */
 void
-VR4300FaultICB(struct VR4300 *unused(vr4300)) {
-  debug("Unimplemented fault: ICB.");
+VR4300FaultICB(struct VR4300 *vr4300) {
+  uint32_t address = vr4300->pipeline.faultManager.faultCauseData;
+  VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
 }
 
 /* ============================================================================
@@ -396,6 +420,18 @@ HandleFaults(struct VR4300 *vr4300) {
   memset(&exdcLatch->result, 0, sizeof(exdcLatch->result));
   VR4300InvalidateOpcode(&rfexLatch->opcode);
   icrfLatch->iwMask = 0;
+
+  /* Resolve the fault appropriately. */
+  FaultHandlerTable[manager->fault](vr4300);
+
+  /* Reset the pipeline (to effectively flush it). */
+  manager->pcuIndex = VR4300_PCU_NORMAL;
+  manager->fault = VR4300_FAULT_INV;
+}
+
+void
+HandleInterlocks(struct VR4300 *vr4300) {
+  struct VR4300FaultManager *manager = &vr4300->pipeline.faultManager;
 
   /* Resolve the fault appropriately. */
   FaultHandlerTable[manager->fault](vr4300);
