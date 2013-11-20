@@ -42,20 +42,28 @@ static void FastForward(struct VR4300 *);
  *  the pipeline. The stages spend handing the fault count towards the delay
  *  cycles.
  * ========================================================================= */
+static void CycleVR4300_ResumeIC(struct VR4300 *);
+static void CycleVR4300_ResumeRF(struct VR4300 *);
+static void CycleVR4300_ResumeEX(struct VR4300 *);
+static void CycleVR4300_ResumeDC(struct VR4300 *);
 static void CycleVR4300_StartRF(struct VR4300 *);
 static void CycleVR4300_StartEX(struct VR4300 *);
 static void CycleVR4300_StartDC(struct VR4300 *);
 typedef void (*ShortPipelineFunction)(struct VR4300 *);
 
 #ifdef DO_FASTFORWARD
-static const ShortPipelineFunction CycleVR4300Short[5] = {
+static const ShortPipelineFunction CycleVR4300Short[9] = {
 #else
-static const ShortPipelineFunction CycleVR4300Short[4] = {
+static const ShortPipelineFunction CycleVR4300Short[8] = {
 #endif
   CycleVR4300_StartRF,
   CycleVR4300_StartEX,
   CycleVR4300_StartDC,
   HandleFaults,
+  CycleVR4300_ResumeIC,
+  CycleVR4300_ResumeRF,
+  CycleVR4300_ResumeEX,
+  CycleVR4300_ResumeDC,
 #ifdef DO_FASTFORWARD
   FastForward,
 #endif
@@ -76,6 +84,9 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
     QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR,
       vr4300->pipeline.icrfLatch.pc, opcode->flags, 0 /* No Data */,
       VR4300_PIPELINE_STAGE_IC);
+
+    /* We're going to handle it, okay? */
+    vr4300->cp0.interruptRaiseMask = 0;
   }
 }
 
@@ -88,22 +99,61 @@ CycleVR4300(struct VR4300 *vr4300) {
     vr4300->pipeline.stalls--;
 
   /* If any faults were raised, handle and bail. */
-  else if (vr4300->pipeline.faultManager.killStage < 0) {
+  else if (vr4300->pipeline.faultManager.pcuIndex < 0) {
     VR4300WBStage(vr4300);
     VR4300DCStage(vr4300);
     VR4300EXStage(vr4300);
     VR4300RFStage(vr4300);
     VR4300ICStage(vr4300);
-
-    /* Only check on a full cycle. */
-    /* TODO: What about end of stalls? */
-    CheckForPendingInterrupts(vr4300);
   }
 
   else
-    CycleVR4300Short[vr4300->pipeline.faultManager.killStage](vr4300);
+    CycleVR4300Short[vr4300->pipeline.faultManager.pcuIndex](vr4300);
 
+  CheckForPendingInterrupts(vr4300);
   IncrementCycleCounters(vr4300);
+}
+
+/* ============================================================================
+ *  CycleVR4300_StartIC: Advances the state of the processor pipeline.
+ *  The processor previously interlocked in IC; restart from here.
+ * ========================================================================= */
+static void CycleVR4300_ResumeIC(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+
+  VR4300ICStage(vr4300);
+}
+
+/* ============================================================================
+ *  CycleVR4300_StartRF: Advances the state of the processor pipeline.
+ *  The processor previously interlocked in IC; restart from here.
+ * ========================================================================= */
+static void CycleVR4300_ResumeRF(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+
+  VR4300RFStage(vr4300);
+  VR4300ICStage(vr4300);
+}
+
+/* ============================================================================
+ *  CycleVR4300_StartEX: Advances the state of the processor pipeline.
+ *  The processor previously interlocked in IC; restart from here.
+ * ========================================================================= */
+static void CycleVR4300_ResumeEX(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+}
+
+/* ============================================================================
+ *  CycleVR4300_StartDC: Advances the state of the processor pipeline.
+ *  The processor previously interlocked in IC; restart from here.
+ * ========================================================================= */
+static void CycleVR4300_ResumeDC(struct VR4300 *vr4300) {
+  vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_NORMAL;
+
+  VR4300DCStage(vr4300);
+  VR4300EXStage(vr4300);
+  VR4300RFStage(vr4300);
+  VR4300ICStage(vr4300);
 }
 
 /* ============================================================================
@@ -112,7 +162,7 @@ CycleVR4300(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartRF(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.killStage++;
+  vr4300->pipeline.faultManager.pcuIndex++;
 
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
@@ -126,7 +176,7 @@ CycleVR4300_StartRF(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartEX(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.killStage++;
+  vr4300->pipeline.faultManager.pcuIndex++;
 
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
@@ -139,7 +189,7 @@ CycleVR4300_StartEX(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartDC(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.killStage++;
+  vr4300->pipeline.faultManager.pcuIndex++;
 
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
@@ -150,11 +200,7 @@ CycleVR4300_StartDC(struct VR4300 *vr4300) {
  * ========================================================================= */
 #ifdef DO_FASTFORWARD
 static void
-FastForward(struct VR4300 *vr4300) {
-  /* Only check on a full cycle. */
-  /* TODO: What about end of stalls? */
-  CheckForPendingInterrupts(vr4300);
-}
+FastForward(struct VR4300 *unused(vr4300)) {}
 #endif
 
 /* ============================================================================

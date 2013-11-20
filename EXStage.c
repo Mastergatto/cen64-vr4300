@@ -12,6 +12,7 @@
 #include "CPU.h"
 #include "Decoder.h"
 #include "EXStage.h"
+#include "Fault.h"
 #include "Pipeline.h"
 #include "Region.h"
 
@@ -141,8 +142,8 @@ VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
 
 #ifdef DO_FASTFORWARD
   if (address == 0xFFFFFFFFFFFFFFFCULL && !rs)
-    if (vr4300->pipeline.faultManager.killStage == -1)
-      vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
+    if (vr4300->pipeline.faultManager.pcuIndex == VR4300_PCU_NORMAL)
+      vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_FASTFORWARD;
 #endif
 
   icrfLatch->pc += address - 4;
@@ -929,8 +930,9 @@ VR4300J(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   uint32_t pcCheck = (icrfLatch->pc & 0x7FFFFFFF) - 4;
   uint32_t addressCheck = address;
 
-  if (pcCheck == addressCheck && vr4300->pipeline.faultManager.killStage == -1)
-    vr4300->pipeline.faultManager.killStage = VR4300_PIPELINE_STAGE_WB;
+  if (pcCheck == addressCheck &&
+    vr4300->pipeline.faultManager.pcuIndex == VR4300_PCU_NORMAL)
+    vr4300->pipeline.faultManager.pcuIndex = VR4300_PCU_FASTFORWARD;
 #endif
 
   icrfLatch->pc &= 0xFFFFFFFFF0000000ULL;

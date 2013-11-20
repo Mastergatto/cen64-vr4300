@@ -21,13 +21,27 @@ enum VR4300PipelineFault {
 
 struct VR4300;
 
+enum VR4300PCUIndex {
+  VR4300_PCU_NORMAL = -1,
+  VR4300_PCU_START_RF = 0,
+  VR4300_PCU_START_EX = 1,
+  VR4300_PCU_START_DC = 2,
+  VR4300_PCU_RESUME_IC = 4,
+  VR4300_PCU_RESUME_RF = 5,
+  VR4300_PCU_RESUME_EX = 6,
+  VR4300_PCU_RESUME_DC = 7,
+#ifdef DO_FASTFORWARD
+  VR4300_PCU_FASTFORWARD = 8,
+#endif
+};
+
 struct VR4300FaultManager {
   uint64_t faultingPC;
   uint32_t nextOpcodeFlags;
   uint32_t faultCauseData;
 
   enum VR4300PipelineFault fault;
-  int killStage;
+  enum VR4300PCUIndex pcuIndex;
 };
 
 #ifndef NDEBUG
@@ -40,7 +54,7 @@ void HandleFaults(struct VR4300 *vr4300);
 void QueueFault(struct VR4300FaultManager *manager,
   enum VR4300PipelineFault fault, uint64_t faultingPC,
   uint32_t nextOpcodeFlags, uint32_t faultCauseData,
-  unsigned killStage);
+  enum VR4300PCUIndex pcuIndex);
 
 void PerformHardReset(struct VR4300FaultManager *manager);
 void PerformSoftReset(struct VR4300FaultManager *manager);

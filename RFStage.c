@@ -64,10 +64,6 @@ VR4300RFStage(struct VR4300 *vr4300) {
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   uint32_t address = icrfLatch->address;
 
-  /* Always update PC. */
-  rfexLatch->pc = icrfLatch->pc;
-  icrfLatch->pc += 4;
-
   /* Is the region cache-able? */
   if (likely(icrfLatch->region->cached)) {
     const struct VR4300ICacheLineData *cacheData;
@@ -93,6 +89,10 @@ VR4300RFStage(struct VR4300 *vr4300) {
     rfexLatch->opcode.id &= icrfLatch->iwMask;
     rfexLatch->iw = iw;
   }
+
+  /* Forward/update the PC. */
+  rfexLatch->pc = icrfLatch->pc;
+  icrfLatch->pc += 4;
 
   /* Reset the mask. */
   icrfLatch->iwMask = ~0;

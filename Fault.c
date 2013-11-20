@@ -107,10 +107,10 @@ void PerformSoftReset(struct VR4300FaultManager *manager) {
 void
 QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
   uint64_t faultingPC, uint32_t nextOpcodeFlags, uint32_t faultCauseData,
-  enum VR4300PipelineStage killStage) {
+  enum VR4300PCUIndex pcuIndex) {
   debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
 
-  assert(killStage < NUM_VR4300_PIPELINE_STAGES && "Invalid killStage.");
+  assert(pcuIndex != VR4300_PCU_NORMAL);
 
   /* Higher priority ready? */
   if (fault < manager->fault)
@@ -120,7 +120,7 @@ QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
   manager->nextOpcodeFlags = nextOpcodeFlags;
   manager->faultCauseData = faultCauseData;
 
-  manager->killStage = killStage;
+  manager->pcuIndex = pcuIndex;
   manager->fault = fault;
 }
 
@@ -401,7 +401,7 @@ HandleFaults(struct VR4300 *vr4300) {
   FaultHandlerTable[manager->fault](vr4300);
 
   /* Reset the pipeline (to effectively flush it). */
+  manager->pcuIndex = VR4300_PCU_NORMAL;
   manager->fault = VR4300_FAULT_INV;
-  manager->killStage = -1;
 }
 
