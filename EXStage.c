@@ -441,8 +441,9 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
           icache->valid[idx] = 0;
         break;
 
-      case 5: /* Fill */
-        VR4300ICacheFill(icache, vr4300->bus, address);
+      case 5: /* Fill; no need to resume from EX... */
+        QueueInterlock(&vr4300->pipeline, VR4300_FAULT_COP,
+          address, VR4300_PCU_RESUME_RF);
         break;
 
       case 6:

@@ -144,7 +144,7 @@ QueueInterlock(struct VR4300Pipeline *pipeline, enum VR4300PipelineFault fault,
 
   /* TODO: Load this value from a table. */
   /* Right now, we just assume this is ICB. */
-  pipeline->stalls = 26;
+  pipeline->stalls = 108;
 }
 
 /* ============================================================================
@@ -159,8 +159,11 @@ VR4300FaultBRPT(struct VR4300 *unused(vr4300)) {
  *  VR4300FaultCOP: CACHE Op Interlock.
  * ========================================================================= */
 void
-VR4300FaultCOP(struct VR4300 *unused(vr4300)) {
-  debug("Unimplemented fault: COP.");
+VR4300FaultCOP(struct VR4300 *vr4300) {
+  uint32_t address = vr4300->pipeline.faultManager.faultCauseData;
+  VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
+
+  /* TODO: Selectively handle ICache/DCache */
 }
 
 /* ============================================================================
