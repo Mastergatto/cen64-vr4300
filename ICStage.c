@@ -29,10 +29,6 @@ VR4300ICStage(struct VR4300 *vr4300) {
   const struct RegionInfo *region = icrfLatch->region;
   uint64_t pc = icrfLatch->pc;
 
-  /* TODO: Is there a more efficent way to check this? */
-  if (vr4300->pipeline.faultManager.pcuIndex >= 0)
-    return;
-
   /* TODO: Giant hack: bypass the ICache/ITLB/TLB for now. */
   if (unlikely((pc - region->start) >= region->length)) {
     if ((region = GetRegionInfo(vr4300, pc)) == NULL) {

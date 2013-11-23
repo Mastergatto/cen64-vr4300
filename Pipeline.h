@@ -14,46 +14,8 @@
 #include "Decoder.h"
 #include "DCStage.h"
 #include "Fault.h"
+#include "Latches.h"
 #include "Region.h"
-
-enum VR4300PipelineStage {
-  VR4300_PIPELINE_STAGE_IC,
-  VR4300_PIPELINE_STAGE_RF,
-  VR4300_PIPELINE_STAGE_EX,
-  VR4300_PIPELINE_STAGE_DC,
-  VR4300_PIPELINE_STAGE_WB,
-  NUM_VR4300_PIPELINE_STAGES
-};
-
-struct VR4300Result {
-  uint64_t data;
-  uint32_t dest;
-  uint32_t flags;
-};
-
-struct VR4300ICRFLatch {
-  const struct RegionInfo *region;
-
-  uint64_t pc;
-  uint32_t address;
-  uint32_t iwMask;
-};
-
-struct VR4300RFEXLatch {
-  uint64_t pc;
-  struct VR4300Opcode opcode;
-  uint32_t iw, padding;
-};
-
-struct VR4300EXDCLatch {
-  struct VR4300Result result;
-  struct VR4300MemoryData memoryData;
-};
-
-struct VR4300DCWBLatch {
-  struct VR4300Result result;
-  const struct RegionInfo *region;
-};
 
 struct VR4300Pipeline {
   unsigned stalls, padding;

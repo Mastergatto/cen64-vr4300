@@ -92,14 +92,14 @@ InitFaultManager(struct VR4300FaultManager *manager) {
  *  PerformHardReset: Queues up a hard reset exception.
  * ========================================================================= */
 void PerformHardReset(struct VR4300FaultManager *manager) {
-  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 0, VR4300_PIPELINE_STAGE_IC);
+  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 0, VR4300_PCU_START_RF);
 }
 
 /* ===========================================================================
  *  PerformSoftReset: Queues up a soft reset exception.
  * ========================================================================= */
 void PerformSoftReset(struct VR4300FaultManager *manager) {
-  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 1, VR4300_PIPELINE_STAGE_IC);
+  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 1, VR4300_PCU_START_RF);
 }
 
 /* ===========================================================================
@@ -144,7 +144,7 @@ QueueInterlock(struct VR4300Pipeline *pipeline, enum VR4300PipelineFault fault,
 
   /* TODO: Load this value from a table. */
   /* Right now, we just assume this is ICB. */
-  pipeline->stalls = 108;
+  pipeline->stalls = 54;
 }
 
 /* ============================================================================
@@ -160,10 +160,13 @@ VR4300FaultBRPT(struct VR4300 *unused(vr4300)) {
  * ========================================================================= */
 void
 VR4300FaultCOP(struct VR4300 *vr4300) {
+  /* TODO: Selectively handle ICache/DCache */
   uint32_t address = vr4300->pipeline.faultManager.faultCauseData;
   VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
 
-  /* TODO: Selectively handle ICache/DCache */
+  /* Restore latch contents that may have been lost. */
+  memcpy(&vr4300->pipeline.icrfLatch, &vr4300->pipeline.faultManager.
+    savedIcrfLatch, sizeof(vr4300->pipeline.icrfLatch));
 }
 
 /* ============================================================================
@@ -261,6 +264,10 @@ void
 VR4300FaultICB(struct VR4300 *vr4300) {
   uint32_t address = vr4300->pipeline.faultManager.faultCauseData;
   VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
+
+  /* Restore latch contents that may have been lost. */
+  memcpy(&vr4300->pipeline.icrfLatch, &vr4300->pipeline.faultManager.
+    savedIcrfLatch, sizeof(vr4300->pipeline.icrfLatch));
 }
 
 /* ============================================================================

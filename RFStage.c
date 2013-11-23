@@ -72,6 +72,9 @@ VR4300RFStage(struct VR4300 *vr4300) {
 
     /* Do we need to fill the line? */
     if (unlikely(cacheData == NULL)) {
+      memcpy(&vr4300->pipeline.faultManager.savedIcrfLatch,
+        icrfLatch, sizeof(*icrfLatch));
+
       QueueInterlock(&vr4300->pipeline, VR4300_FAULT_ICB,
         address, VR4300_PCU_RESUME_RF);
 

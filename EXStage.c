@@ -396,6 +396,7 @@ VR4300BREAK(struct VR4300 *unused(vr4300),
  * ========================================================================= */
 void
 VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
   struct VR4300ICache *icache = &vr4300->icache;
   struct VR4300DCache *dcache = &vr4300->dcache;
@@ -442,6 +443,9 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
         break;
 
       case 5: /* Fill; no need to resume from EX... */
+        memcpy(&vr4300->pipeline.faultManager.savedIcrfLatch,
+          icrfLatch, sizeof(*icrfLatch));
+
         QueueInterlock(&vr4300->pipeline, VR4300_FAULT_COP,
           address, VR4300_PCU_RESUME_RF);
         break;

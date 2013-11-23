@@ -11,6 +11,7 @@
 #ifndef __VR4300__FAULT_H__
 #define __VR4300__FAULT_H__
 #include "Common.h"
+#include "Latches.h"
 
 enum VR4300PipelineFault {
 #define X(fault) VR4300_FAULT_##fault,
@@ -40,6 +41,8 @@ struct VR4300FaultManager {
   uint64_t faultingPC;
   uint32_t nextOpcodeFlags;
   uint32_t faultCauseData;
+
+  struct VR4300ICRFLatch savedIcrfLatch;
 
   enum VR4300PipelineFault fault;
   enum VR4300PCUIndex pcuIndex;

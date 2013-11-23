@@ -83,7 +83,7 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
     /* Queue the exception up, prepare to kill stages. */
     QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR,
       vr4300->pipeline.icrfLatch.pc, opcode->flags, 0 /* No Data */,
-      VR4300_PIPELINE_STAGE_IC);
+      VR4300_PCU_START_RF);
 
     /* We're going to handle it, okay? */
     vr4300->cp0.interruptRaiseMask = 0;
