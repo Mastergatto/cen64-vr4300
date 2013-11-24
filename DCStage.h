@@ -16,8 +16,8 @@
 struct VR4300MemoryData;
 
 typedef void (*VR4300MemoryFunction)(
-  const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
+  const struct VR4300MemoryData *memoryDatamemoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
 
 struct VR4300MemoryData {
   VR4300MemoryFunction function;
@@ -33,48 +33,48 @@ struct VR4300DFWBLatch;
 void VR4300DCStage(struct VR4300 *);
 
 /* Memory functions. */
-void VR4300LoadByte(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadByteU(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadHWord(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadHWordU(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadWord(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadWordU(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadDWord(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreByte(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreHWord(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreWord(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreDWord(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadWordFPU(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
+void VR4300LoadByte(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadByteU(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadHWord(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadHWordU(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadWord(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadWordU(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadDWord(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreByte(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreHWord(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreWord(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreDWord(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadWordFPU(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
 
 /* Unaligned accesses. */
-void VR4300LoadWordLeft(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadWordRight(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreWordLeft(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreWordRight(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadDWordLeft(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300LoadDWordRight(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreDWordLeft(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
-void VR4300StoreDWordRight(const struct VR4300MemoryData *,
-  struct VR4300DCache *, bool);
+void VR4300LoadWordLeft(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadWordRight(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreWordLeft(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreWordRight(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadDWordLeft(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300LoadDWordRight(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreDWordLeft(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
+void VR4300StoreDWordRight(const struct VR4300MemoryData *memoryData,
+  struct BusController *bus, struct VR4300DCacheLine *line);
 
 #endif
 

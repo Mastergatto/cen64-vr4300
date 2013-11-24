@@ -461,7 +461,7 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     idx = (address >> 4) & 0x1FF;
 
     if (op == 0) {
-      VR4300DCacheFill(dcache, address);
+      VR4300DCacheFill(dcache, vr4300->bus, address);
       dcache->valid[idx] = false;
     }
 
@@ -473,7 +473,7 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     /* This is NOT correct; needs to do it only when dirty. */
     else if (op == 5 && dcache->valid[idx]) {
       if (dcache->lines[idx].tag == (paddr >> 4)) {
-        VR4300DCacheFill(dcache, address);
+        VR4300DCacheFill(dcache, vr4300->bus, address);
         dcache->valid[idx] = false;
       }
     }
@@ -481,7 +481,7 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
     /* This is NOT correct; needs to do it only when dirty. */
     else if (op == 6 && dcache->valid[idx]) {
       if (dcache->lines[idx].tag == (paddr >> 4))
-        VR4300DCacheFill(dcache, address);
+        VR4300DCacheFill(dcache, vr4300->bus, address);
     }
 
     else {

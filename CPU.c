@@ -76,7 +76,6 @@ CheckForRCPInterrupts(struct VR4300 *vr4300) {
  * ========================================================================= */
 void
 ConnectVR4300ToBus(struct VR4300 *vr4300, struct BusController *bus) {
-  vr4300->dcache.bus = bus;
   vr4300->bus = bus;
 }
 

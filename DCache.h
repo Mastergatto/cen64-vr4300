@@ -20,15 +20,16 @@ struct VR4300DCacheLine {
 };
 
 struct VR4300DCache {
-  struct BusController *bus;
   struct VR4300DCacheLine lines[512];
   bool valid[512];
 };
 
 void VR4300InitDCache(struct VR4300DCache *dcache);
-void VR4300DCacheFill(struct VR4300DCache *dcache, uint32_t paddr);
-struct VR4300DCacheLine* VR4300DCacheProbe(struct VR4300DCache *dcache,
-  uint32_t paddr);
+void VR4300DCacheFill(struct VR4300DCache *dcache,
+  struct BusController *bus, uint32_t paddr);
+
+struct VR4300DCacheLine* VR4300DCacheProbe(
+  struct VR4300DCache *dcache, uint32_t paddr);
 
 #endif
 

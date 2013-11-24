@@ -23,7 +23,8 @@
 /* ============================================================================
  *  Returns the data cache line and sets the tags.
  * ========================================================================= */
-void VR4300DCacheFill(struct VR4300DCache *dcache, uint32_t paddr) {
+void VR4300DCacheFill(struct VR4300DCache *dcache,
+  struct BusController *bus, uint32_t paddr) {
   unsigned lineIdx = paddr >> 4 & 0x1FF;
   unsigned ppo = paddr >> 4;
   unsigned i;
@@ -38,7 +39,7 @@ void VR4300DCacheFill(struct VR4300DCache *dcache, uint32_t paddr) {
     void *opaque;
 
     wraddr = line->tag << 4;
-    write = BusWrite(dcache->bus, BUS_TYPE_WORD, wraddr, &opaque);
+    write = BusWrite(bus, BUS_TYPE_WORD, wraddr, &opaque);
 
     for (i = 0; i < 16; i += 4) {
       uint32_t word;
@@ -54,7 +55,7 @@ void VR4300DCacheFill(struct VR4300DCache *dcache, uint32_t paddr) {
 
   /* And fill it entirely. */
   for (i = 0 ; i < 16; i += 4) {
-    uint32_t word = ByteOrderSwap32(BusReadWord(dcache->bus, paddr + i));
+    uint32_t word = ByteOrderSwap32(BusReadWord(bus, paddr + i));
     memcpy(line->data + i, &word, sizeof(word));
   }
 }
@@ -81,6 +82,5 @@ struct VR4300DCacheLine* VR4300DCacheProbe(
  * ========================================================================= */
 void VR4300InitDCache(struct VR4300DCache *dcache) {
   memset(dcache->valid, 0, sizeof(dcache->valid));
-  dcache->bus = NULL;
 }
 
