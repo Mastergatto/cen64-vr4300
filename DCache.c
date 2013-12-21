@@ -41,7 +41,8 @@ void VR4300DCacheFill(struct VR4300DCache *dcache,
     wraddr = line->tag << 4;
     write = BusWrite(bus, BUS_TYPE_WORD, wraddr, &opaque);
 
-    for (i = 0; i < 16; i += 4) {
+    /* TODO: Why is if (write) needed? */
+    if (write) for (i = 0; i < 16; i += 4) {
       uint32_t word;
       memcpy(&word, line->data + i, sizeof(word));
       word = ByteOrderSwap32(word);

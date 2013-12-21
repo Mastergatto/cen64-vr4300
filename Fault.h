@@ -38,14 +38,18 @@ enum VR4300PCUIndex {
 };
 
 struct VR4300FaultManager {
-  uint64_t faultingPC;
-  uint32_t nextOpcodeFlags;
-  uint32_t faultCauseData;
-
   struct VR4300ICRFLatch savedIcrfLatch;
 
-  enum VR4300PipelineFault fault;
-  enum VR4300PCUIndex pcuIndex;
+  uint64_t faultingPC;
+  uint32_t nextOpcodeFlags;
+  uint32_t excpCauseData;
+  uint32_t ilData;
+
+  enum VR4300PipelineFault excp;
+  enum VR4300PipelineFault il;
+  enum VR4300PCUIndex excpIndex;
+  enum VR4300PCUIndex ilIndex;
+  bool faulting;
 };
 
 #ifndef NDEBUG
@@ -53,16 +57,16 @@ extern const char *VR4300FaultMnemonics[NUM_VR4300_FAULTS];
 #endif
 
 void InitFaultManager(struct VR4300FaultManager *manager);
-void HandleFaults(struct VR4300 *vr4300);
+void HandleExceptions(struct VR4300 *vr4300);
 void HandleInterlocks(struct VR4300 *vr4300);
+
+void QueueException(struct VR4300FaultManager *manager,
+  enum VR4300PipelineFault fault, uint64_t faultingPC,
+  uint32_t nextOpcodeFlags, uint32_t faultCauseData,
+  enum VR4300PCUIndex pcuIndex);
 
 void QueueInterlock(struct VR4300Pipeline *pipeline,
   enum VR4300PipelineFault fault, uint32_t faultCauseData,
-  enum VR4300PCUIndex pcuIndex);
-
-void QueueFault(struct VR4300FaultManager *manager,
-  enum VR4300PipelineFault fault, uint64_t faultingPC,
-  uint32_t nextOpcodeFlags, uint32_t faultCauseData,
   enum VR4300PCUIndex pcuIndex);
 
 void PerformHardReset(struct VR4300FaultManager *manager);

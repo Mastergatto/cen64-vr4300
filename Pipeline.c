@@ -59,7 +59,7 @@ static const ShortPipelineFunction CycleVR4300Short[8] = {
   CycleVR4300_StartRF,
   CycleVR4300_StartEX,
   CycleVR4300_StartDC,
-  HandleFaults,
+  HandleExceptions,
   CycleVR4300_ResumeIC,
   CycleVR4300_ResumeRF,
   CycleVR4300_ResumeEX,
@@ -81,12 +81,9 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
     const struct VR4300Opcode *opcode = &vr4300->pipeline.rfexLatch.opcode;
 
     /* Queue the exception up, prepare to kill stages. */
-    QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR,
+    QueueException(&vr4300->pipeline.faultManager, VR4300_FAULT_INTR,
       vr4300->pipeline.icrfLatch.pc, opcode->flags, 0 /* No Data */,
       VR4300_PCU_START_RF);
-
-    /* We're going to handle it, okay? */
-    vr4300->cp0.interruptRaiseMask = 0;
   }
 }
 
@@ -95,23 +92,32 @@ CheckForPendingInterrupts(struct VR4300 *vr4300) {
  * ========================================================================= */
 void
 CycleVR4300(struct VR4300 *vr4300) {
-  if (vr4300->pipeline.stalls > 0)
-    vr4300->pipeline.stalls--;
-
-  /* If any faults were raised, handle and bail. */
-  else if (vr4300->pipeline.faultManager.pcuIndex < 0) {
+  if (!vr4300->pipeline.faultManager.faulting) {
     VR4300WBStage(vr4300);
     VR4300DCStage(vr4300);
     VR4300EXStage(vr4300);
     VR4300RFStage(vr4300);
     VR4300ICStage(vr4300);
 
-    if (vr4300->pipeline.faultManager.pcuIndex < 0)
+    if (!vr4300->pipeline.faultManager.faulting)
       CheckForPendingInterrupts(vr4300);
   }
 
-  else
-    CycleVR4300Short[vr4300->pipeline.faultManager.pcuIndex](vr4300);
+  /* We're either stalling, need to handle an interlock, */
+  /* have a pending exception, or are fast-forwarding. */
+  else {
+    if (vr4300->pipeline.stalls > 0)
+      vr4300->pipeline.stalls--;
+
+    /* TODO: This is a hack just to get things working... */
+    else if (vr4300->pipeline.faultManager.ilIndex != VR4300_PCU_NORMAL) {
+      CycleVR4300Short[vr4300->pipeline.faultManager.ilIndex](vr4300);
+      CheckForPendingInterrupts(vr4300);
+    }
+
+    else
+      CycleVR4300Short[vr4300->pipeline.faultManager.excpIndex](vr4300);
+  }
 
   IncrementCycleCounters(vr4300);
 }
@@ -168,7 +174,7 @@ static void CycleVR4300_ResumeDC(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartRF(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.pcuIndex++;
+  vr4300->pipeline.faultManager.excpIndex++;
 
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
@@ -182,7 +188,7 @@ CycleVR4300_StartRF(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartEX(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.pcuIndex++;
+  vr4300->pipeline.faultManager.excpIndex++;
 
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);
@@ -195,7 +201,7 @@ CycleVR4300_StartEX(struct VR4300 *vr4300) {
  * ========================================================================= */
 static void
 CycleVR4300_StartDC(struct VR4300 *vr4300) {
-  vr4300->pipeline.faultManager.pcuIndex++;
+  vr4300->pipeline.faultManager.excpIndex++;
 
   VR4300WBStage(vr4300);
   VR4300DCStage(vr4300);

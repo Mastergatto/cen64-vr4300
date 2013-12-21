@@ -85,6 +85,10 @@ CommonExceptionHandler(struct VR4300CP0 *cp0, uint64_t *pc,
  * ========================================================================= */
 void
 InitFaultManager(struct VR4300FaultManager *manager) {
+  manager->excpIndex = VR4300_PCU_NORMAL;
+  manager->ilIndex = VR4300_PCU_NORMAL;
+  manager->faulting = 0;
+
   PerformHardReset(manager);
 }
 
@@ -92,37 +96,46 @@ InitFaultManager(struct VR4300FaultManager *manager) {
  *  PerformHardReset: Queues up a hard reset exception.
  * ========================================================================= */
 void PerformHardReset(struct VR4300FaultManager *manager) {
-  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 0, VR4300_PCU_START_RF);
+  QueueException(manager, VR4300_FAULT_RST, 0, 0, 0, VR4300_PCU_START_RF);
 }
 
 /* ===========================================================================
  *  PerformSoftReset: Queues up a soft reset exception.
  * ========================================================================= */
 void PerformSoftReset(struct VR4300FaultManager *manager) {
-  QueueFault(manager, VR4300_FAULT_RST, 0, 0, 1, VR4300_PCU_START_RF);
+  QueueException(manager, VR4300_FAULT_RST, 0, 0, 1, VR4300_PCU_START_RF);
 }
 
 /* ===========================================================================
- *  QueueFault: Queues up a pipeline fault notice in a prioritized fashion.
+ *  QueueException: Queues up a pipeline exception in a prioritized fashion.
  * ========================================================================= */
 void
-QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
-  uint64_t faultingPC, uint32_t nextOpcodeFlags, uint32_t faultCauseData,
-  enum VR4300PCUIndex pcuIndex) {
-  debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
+QueueException(struct VR4300FaultManager *manager,
+  enum VR4300PipelineFault fault,uint64_t faultingPC, uint32_t nextOpcodeFlags,
+  uint32_t excpCauseData, enum VR4300PCUIndex excpIndex) {
 
-  assert(pcuIndex != VR4300_PCU_NORMAL);
+  assert(excpIndex != VR4300_PCU_NORMAL);
 
-  /* Higher priority fault ready? (Later pipeline stages have priority) */
-  if (manager->fault != VR4300_FAULT_INV && fault > manager->fault)
+  /* Higher priority fault ready? On an exception, the faulting instruction *
+   * and all instructions that follow it are aborted. So, we only raise an *
+   * exception iff the faulting stage comes after the instruction that may *
+   * have already caused a fault. */
+  if (excpIndex <= manager->excpIndex
+#ifdef DO_FASTFORWARD
+    && manager->excpIndex != VR4300_PCU_FASTFORWARD
+#endif
+    )
     return;
+
+  debugarg("Queued up a fault: %s.", VR4300FaultMnemonics[fault]);
 
   manager->faultingPC = faultingPC;
   manager->nextOpcodeFlags = nextOpcodeFlags;
-  manager->faultCauseData = faultCauseData;
 
-  manager->pcuIndex = pcuIndex;
-  manager->fault = fault;
+  manager->excpCauseData = excpCauseData;
+  manager->excpIndex = excpIndex;
+  manager->excp = fault;
+  manager->faulting = 1;
 }
 
 /* ============================================================================
@@ -130,17 +143,20 @@ QueueFault(struct VR4300FaultManager *manager, enum VR4300PipelineFault fault,
  * ========================================================================= */
 void
 QueueInterlock(struct VR4300Pipeline *pipeline, enum VR4300PipelineFault fault,
-  uint32_t faultCauseData, enum VR4300PCUIndex pcuIndex) {
+  uint32_t ilData, enum VR4300PCUIndex ilIndex) {
   struct VR4300FaultManager *manager = &pipeline->faultManager;
-  assert(pcuIndex != VR4300_PCU_NORMAL);
 
-  /* Higher priority fault ready? (Later pipeline stages have priority) */
-  if (manager->fault != VR4300_FAULT_INV && fault > manager->fault)
+  assert(ilIndex != VR4300_PCU_NORMAL);
+
+  /* Higher priority fault ready? We'll ignore the current one if so, because *
+   * it will inevitably be raised again after the current fault is resolved. */
+  if (ilIndex <= manager->ilIndex)
     return;
 
-  manager->faultCauseData = faultCauseData;
-  manager->pcuIndex = pcuIndex;
-  manager->fault = fault;
+  manager->ilData = ilData;
+  manager->ilIndex = ilIndex;
+  manager->il = fault;
+  manager->faulting = 1;
 
   /* TODO: Load this value from a table. */
   /* Right now, we just assume this is ICB. */
@@ -161,7 +177,7 @@ VR4300FaultBRPT(struct VR4300 *unused(vr4300)) {
 void
 VR4300FaultCOP(struct VR4300 *vr4300) {
   /* TODO: Selectively handle ICache/DCache */
-  uint32_t address = vr4300->pipeline.faultManager.faultCauseData;
+  uint32_t address = vr4300->pipeline.faultManager.ilData;
   VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
 
   /* Restore latch contents that may have been lost. */
@@ -188,7 +204,7 @@ VR4300FaultCPU(struct VR4300 *vr4300) {
 
   debug("Handing fault: CPU.");
 
-  cp0->regs.cause.ce = manager->faultCauseData;
+  cp0->regs.cause.ce = manager->excpCauseData;
   CommonExceptionHandler(cp0, &pipeline->icrfLatch.pc,
     manager->faultingPC, 11, manager->nextOpcodeFlags);
 }
@@ -262,7 +278,7 @@ VR4300FaultIBE(struct VR4300 *unused(vr4300)) {
  * ========================================================================= */
 void
 VR4300FaultICB(struct VR4300 *vr4300) {
-  uint32_t address = vr4300->pipeline.faultManager.faultCauseData;
+  uint32_t address = vr4300->pipeline.faultManager.ilData;
   VR4300ICacheFill(&vr4300->icache, vr4300->bus, address);
 
   /* Restore latch contents that may have been lost. */
@@ -280,8 +296,9 @@ VR4300FaultINTR(struct VR4300 *vr4300) {
   struct VR4300CP0 *cp0 = &vr4300->cp0;
 
   debug("Handing fault: INTR.");
+  vr4300->cp0.interruptRaiseMask = 0;
 
-  cp0->regs.cause.ce = manager->faultCauseData;
+  cp0->regs.cause.ce = manager->excpCauseData;
   CommonExceptionHandler(cp0, &pipeline->icrfLatch.pc,
     manager->faultingPC, 0, manager->nextOpcodeFlags);
 }
@@ -345,7 +362,7 @@ VR4300FaultRST(struct VR4300 *vr4300) {
   debug("Handling fault: RST");
 
   /* RST/SOFT */
-  if (vr4300->pipeline.faultManager.faultCauseData) {
+  if (vr4300->pipeline.faultManager.excpCauseData) {
     debug("Unimplemented fault: RST/Soft.");
   }
 
@@ -418,7 +435,7 @@ static const FaultHandler FaultHandlerTable[NUM_VR4300_FAULTS] = {
 };
 
 void
-HandleFaults(struct VR4300 *vr4300) {
+HandleExceptions(struct VR4300 *vr4300) {
   struct VR4300FaultManager *manager = &vr4300->pipeline.faultManager;
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
@@ -431,12 +448,15 @@ HandleFaults(struct VR4300 *vr4300) {
   VR4300InvalidateOpcode(&rfexLatch->opcode);
   icrfLatch->iwMask = 0;
 
-  /* Resolve the fault appropriately. */
-  FaultHandlerTable[manager->fault](vr4300);
+  /* Resolve the exception appropriately. */
+  FaultHandlerTable[manager->excp](vr4300);
 
   /* Reset the pipeline (to effectively flush it). */
-  manager->pcuIndex = VR4300_PCU_NORMAL;
-  manager->fault = VR4300_FAULT_INV;
+  manager->excpIndex = VR4300_PCU_NORMAL;
+  manager->ilIndex = VR4300_PCU_NORMAL;
+  manager->excp = VR4300_FAULT_INV;
+  manager->il = VR4300_FAULT_INV;
+  manager->faulting = 0;
 }
 
 void
@@ -444,10 +464,11 @@ HandleInterlocks(struct VR4300 *vr4300) {
   struct VR4300FaultManager *manager = &vr4300->pipeline.faultManager;
 
   /* Resolve the fault appropriately. */
-  FaultHandlerTable[manager->fault](vr4300);
+  FaultHandlerTable[manager->il](vr4300);
 
   /* Reset the pipeline (to effectively flush it). */
-  manager->pcuIndex = VR4300_PCU_NORMAL;
-  manager->fault = VR4300_FAULT_INV;
+  manager->faulting = (manager->excpIndex != VR4300_PCU_NORMAL);
+  manager->ilIndex = VR4300_PCU_NORMAL;
+  manager->il = VR4300_FAULT_INV;
 }
 

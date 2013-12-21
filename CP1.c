@@ -47,7 +47,7 @@ FPUCheckUsable(struct VR4300 *vr4300) {
     return 1;
 
   /* Queue the exception up, prepare to kill stages. */
-  QueueFault(&vr4300->pipeline.faultManager, VR4300_FAULT_CPU,
+  QueueException(&vr4300->pipeline.faultManager, VR4300_FAULT_CPU,
     vr4300->pipeline.rfexLatch.pc, exdcLatch->result.flags, 1 /* COp ID */,
     VR4300_PCU_START_DC);
 
