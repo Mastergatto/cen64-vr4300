@@ -109,14 +109,10 @@ CycleVR4300(struct VR4300 *vr4300) {
     if (vr4300->pipeline.stalls > 0)
       vr4300->pipeline.stalls--;
 
-    /* TODO: This is a hack just to get things working... */
-    else if (vr4300->pipeline.faultManager.ilIndex != VR4300_PCU_NORMAL) {
-      CycleVR4300Short[vr4300->pipeline.faultManager.ilIndex](vr4300);
-      CheckForPendingInterrupts(vr4300);
-    }
-
-    else
-      CycleVR4300Short[vr4300->pipeline.faultManager.excpIndex](vr4300);
+    else vr4300->pipeline.faultManager.ilIndex >
+      vr4300->pipeline.faultManager.excpIndex
+        ? CycleVR4300Short[vr4300->pipeline.faultManager.ilIndex](vr4300)
+        : CycleVR4300Short[vr4300->pipeline.faultManager.excpIndex](vr4300);
   }
 
   IncrementCycleCounters(vr4300);
