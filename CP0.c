@@ -149,7 +149,7 @@ VR4300MFC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
   case VR4300_CP0_REGISTER_ENTRYHI:
     result =
       (uint64_t) vr4300->cp0.regs.entryHi.asid |
-      (uint64_t) vr4300->cp0.regs.entryHi.vpn << 13 |
+      (uint64_t) vr4300->cp0.regs.entryHi.vpn2 << 13 |
       (uint64_t) vr4300->cp0.regs.entryHi.region << 62;
     break;
 
@@ -244,7 +244,7 @@ VR4300MTC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
   case VR4300_CP0_REGISTER_ENTRYHI:
     vr4300->cp0.regs.entryHi.asid = rt & 0xFF;
-    vr4300->cp0.regs.entryHi.vpn = rt >> 13 & 0x7FFFFFF;
+    vr4300->cp0.regs.entryHi.vpn2 = rt >> 13 & 0x7FFFFFF;
     vr4300->cp0.regs.entryHi.region = rt >> 62 & 0x3;
     break;
 

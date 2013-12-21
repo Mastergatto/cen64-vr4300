@@ -16,8 +16,10 @@
 #include "TLBTree.h"
 
 #ifdef __cplusplus
+#include <cassert>
 #include <cstring>
 #else
+#include <assert.h>
 #include <string.h>
 #endif
 
@@ -42,11 +44,22 @@ VR4300TLBINV(struct VR4300 *unused(vr4300)) {
 
 /* ==========================================================================
  *  Instruction: TLBP (Probe TLB For Matching Entry)
+ *  TODO: Handle subtleties of 64-bit access.
  * ========================================================================= */
 void
 VR4300TLBP(struct VR4300 *vr4300) {
-  debug("Unimplemented function: TLBP.");
-  vr4300->cp0.regs.index.probe = 1;
+  vr4300->cp0.regs.index.probe = 0;
+
+  /* Try to grab the node with the page start address. */
+  const struct TLBNode* node = TLBTreeLookup(
+    &vr4300->tlb.tlbTree, vr4300->cp0.regs.entryHi.asid,
+    (uint64_t) vr4300->cp0.regs.entryHi.region << 62 |
+    (uint64_t) vr4300->cp0.regs.entryHi.vpn2 << 13);
+
+  if (node != NULL) {
+    vr4300->cp0.regs.index.probe = 1;
+    vr4300->cp0.regs.index.index = node - vr4300->tlb.tlbTree.entries;
+  }
 }
 
 /* ==========================================================================
@@ -61,35 +74,47 @@ VR4300TLBR(struct VR4300 *unused(vr4300)) {
  *  Instruction: TLBWI (Write Indexed TLB Entry)
  * ========================================================================= */
 void
-VR4300TLBWI(struct VR4300 *unused(vr4300)) {
-#if 0
+VR4300TLBWI(struct VR4300 *vr4300) {
   struct EntryHi *entryHi = &vr4300->cp0.regs.entryHi;
   struct EntryLo *entryLo0 = &vr4300->cp0.regs.entryLo0;
   struct EntryLo *entryLo1 = &vr4300->cp0.regs.entryLo1;
   uint16_t pageMask = vr4300->cp0.regs.pageMask;
+  struct TLBTree *tlbTree = &vr4300->tlb.tlbTree;
+  struct TLBNode *node;
 
+#ifndef NDEBUG
   debugarg("Mapping TLB Entry: %u", vr4300->cp0.regs.index.index);
-  debugarg("ASID      : %u.", entryHi->asid);
+  debugarg("TLB: ASID      : %u.", entryHi->asid);
 
   (entryLo0->global && entryLo1->global)
-    ? debug("Global    : Yes.")
-    : debug("Global    : No.");
+    ? debug("TLB: Global    : Yes.")
+    : debug("TLB: Global    : No.");
 
-  debugarg("PageMask  : [0x%.4x].", pageMask);
+  debugarg("TLB: PageMask  : [0x%.4x].", pageMask);
 
-  debugarg("PPN0      : [0x%.8x].", entryLo0->pfn & pageMask); 
-  debugarg("PPN1      : [0x%.8x].", entryLo1->pfn & pageMask); 
+  debugarg("TLB: PPN0      : [0x%.8x].", entryLo0->pfn & pageMask); 
+  debugarg("TLB: PPN1      : [0x%.8x].", entryLo1->pfn & pageMask); 
 
   (entryLo0->valid)
-    ? debug("PPN0 Valid: Yes.")
-    : debug("PPN0 Valid: No.");
+    ? debug("TLB: PPN0 Valid: Yes.")
+    : debug("TLB: PPN0 Valid: No.");
 
   (entryLo1->valid)
-    ? debug("PPN1 Valid: Yes.")
-    : debug("PPN1 Valid: No.");
+    ? debug("TLB: PPN1 Valid: Yes.")
+    : debug("TLB: PPN1 Valid: No.");
 
-  debugarg("VPN:  [0x%.16lx].", (uint64_t) entryHi->vpn << 13);
+  debugarg("TLB: VPN2:  [0x%.16lx].", (uint64_t) entryHi->vpn2);
 #endif
+
+  /* Evict the old entry, setup up the new one, insert it. */
+  node = tlbTree->entries + vr4300->cp0.regs.index.index;
+
+  TLBTreeEvict(tlbTree, node);
+  memcpy(&node->tlbEntryLo0, entryLo0, sizeof(*entryLo0));
+  memcpy(&node->tlbEntryLo1, entryLo1, sizeof(*entryLo1));
+  memcpy(&node->tlbEntryHi,  entryHi,  sizeof(*entryHi));
+  node->pageMask = pageMask;
+  TLBTreeInsert(tlbTree, node);
 }
 
 /* ==========================================================================

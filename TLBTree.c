@@ -47,11 +47,11 @@ static void TLBTreeFixup(struct TLBNode **,
 static bool
 DoEntriesOverlap(const struct TLBNode *x, const struct TLBNode *y) {
   if (GetEntryEndAddress(x) < GetEntryEndAddress(y)) {
-    if (GetEntryEndAddress(x) >= y->tlbEntryHi.vpn)
+    if (GetEntryEndAddress(x) >= y->tlbEntryHi.vpn2)
       return false;
   }
 
-  else if (x->tlbEntryHi.vpn <= GetEntryEndAddress(y))
+  else if (x->tlbEntryHi.vpn2 <= GetEntryEndAddress(y))
     return true;
 
   return false;
@@ -89,7 +89,7 @@ IsGlobalEntry(const struct TLBNode *x) {
  * ========================================================================= */
 static uint32_t
 GetEntryEndAddress(const struct TLBNode *x) {
-  return x->tlbEntryHi.vpn + x->pageMask;
+  return x->tlbEntryHi.vpn2 + x->pageMask;
 }
 
 /* ============================================================================
@@ -155,14 +155,14 @@ RotateRight(struct TLBNode **root,
  * ========================================================================= */
 static const struct TLBNode*
 SearchTree(const struct TLBNode *node,
-  const struct TLBNode *nil, uint32_t vpn) {
+  const struct TLBNode *nil, uint32_t vpn2) {
 
   while (node != nil) {
-    if (node->tlbEntryHi.vpn == (~node->pageMask & vpn))
+    if (node->tlbEntryHi.vpn2 == (~node->pageMask & vpn2))
       return node;
 
     else
-      node = (vpn < node->tlbEntryHi.vpn)
+      node = (vpn2 < node->tlbEntryHi.vpn2)
         ? node->left : node->right;
   }
 
@@ -177,6 +177,10 @@ TLBTreeEvict(struct TLBTree *tree, struct TLBNode *node) {
   struct TLBNode *fixup, *original = node, *nil, *remove = node;
   enum TLBTreeColor originalColor = node->color;
   struct TLBNode **root;
+
+  /* Entry isn't in the tree! */
+  if (node->parent == NULL)
+    return;
 
   /* Which tree is entry in? */
   if (IsGlobalEntry(node)) {
@@ -307,6 +311,8 @@ TLBTreeEvict(struct TLBTree *tree, struct TLBNode *node) {
 
     fixup->color = TLBTREE_BLACK;
   }
+
+  node->parent = NULL;
 }
 
 /* ============================================================================
@@ -382,6 +388,7 @@ TLBTreeFixup(struct TLBNode **root, struct TLBNode *nil, struct TLBNode *node){
 int
 TLBTreeInsert(struct TLBTree *tree, struct TLBNode *node) {
   struct TLBNode **root, *nil, *check, *cur;
+  assert(node->tlbEntryHi.vpn2 < 0x8000000U);
 
   /* Which tree are we using? */
   if (IsGlobalEntry(node)) {
@@ -398,7 +405,7 @@ TLBTreeInsert(struct TLBTree *tree, struct TLBNode *node) {
   cur = nil;
 
   /* Merge the region into the VPN to cut down on lookup time. */
-  node->tlbEntryHi.vpn |= ((uint32_t) node->tlbEntryHi.region) << 27;
+  node->tlbEntryHi.vpn2 |= ((uint32_t) node->tlbEntryHi.region) << 27;
   const uint32_t entryEndAddress = GetEntryEndAddress(node);
 
   /* Walk down the tree. */
@@ -468,16 +475,16 @@ TLBTreeInsert(struct TLBTree *tree, struct TLBNode *node) {
  * ========================================================================= */
 const struct TLBNode*
 TLBTreeLookup(const struct TLBTree *tree, uint8_t asid, uint64_t address) {
-  uint32_t vpn = ((uint32_t) (address >> 13)) & 0x07FFFFFFU;
+  uint32_t vpn2 = ((uint32_t) (address >> 13)) & 0x07FFFFFFU;
   uint8_t region = (address >> 62) & 0x3;
   const struct TLBNode *node;
 
   /* Cut down on lookup time... */
   /* Merge the region into the VPN. */
-  vpn |= ((uint32_t) region) << 27;
+  vpn2 |= ((uint64_t) region) << 27;
 
   /* Search the subtree containing global entries first. */
-  if ((node = SearchTree(tree->globalEntryRoot, &tree->globalNilNode,  vpn)))
+  if ((node = SearchTree(tree->globalEntryRoot, &tree->globalNilNode, vpn2)))
     return node;
 
   node = tree->asidEntryRoot;
@@ -489,7 +496,7 @@ TLBTreeLookup(const struct TLBTree *tree, uint8_t asid, uint64_t address) {
   }
 
   /* Search the part of the tree with the same ASIDs. */
-  if ((node = SearchTree(node, &tree->asidNilNode, vpn)))
+  if ((node = SearchTree(node, &tree->asidNilNode, vpn2)))
     return node;
 
   return NULL;

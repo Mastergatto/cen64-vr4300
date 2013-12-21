@@ -59,7 +59,7 @@ struct EntryLo {
 };
 
 struct EntryHi {
-  uint32_t vpn;
+  uint32_t vpn2;
   uint8_t asid;
   uint8_t region;
 };
