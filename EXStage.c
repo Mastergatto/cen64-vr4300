@@ -421,6 +421,19 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   address -= region->offset;
   paddr = address;
 
+  if (region->mapped) {
+    debugarg("TLB CACHE Access: Address: 0x%.16lX.", address);
+
+    if (!VR4300Translate(vr4300, address, &paddr)) {
+      debugarg("TLB Miss: Address: 0x%.16lX.", address);
+      debug("Unimplemented fault: VR4300_TLB_...");
+    }
+
+    else {
+      debugarg("TLB Hit: Address: 0x%.8X.", paddr);
+    }
+  }
+
   if (cache == 0) {
     idx = (address >> 5) & 0x1FF;
 
