@@ -103,8 +103,8 @@ VR4300TLBWI(struct VR4300 *vr4300) {
 
   debugarg("TLB: PageMask  : [0x%.4x].", pageMask);
 
-  debugarg("TLB: PPN0      : [0x%.8x].", entryLo0->pfn & pageMask); 
-  debugarg("TLB: PPN1      : [0x%.8x].", entryLo1->pfn & pageMask); 
+  debugarg("TLB: PFN0      : [0x%.8x].", entryLo0->pfn << 12); 
+  debugarg("TLB: PFN1      : [0x%.8x].", entryLo1->pfn << 12); 
 
   (entryLo0->valid)
     ? debug("TLB: PPN0 Valid: Yes.")
@@ -180,5 +180,30 @@ static const VR4300TLBFunction VR4300TLBFunctionTable[64] = {
 void
 VR4300TLB(struct VR4300 *vr4300,uint64_t unused(rs), uint64_t unused(rt)) {
   VR4300TLBFunctionTable[vr4300->pipeline.rfexLatch.iw & 0x3F](vr4300);
+}
+
+/* ============================================================================
+ *  VR4300Translate: Translates a virtual to physical address.
+ * ========================================================================= */
+bool
+VR4300Translate(struct VR4300 *vr4300, uint64_t vaddr, uint32_t* paddr) {
+  const struct EntryLo *loEntry;
+  const struct TLBNode* node;
+  uint64_t pageEndAddr;
+  uint32_t mask;
+
+  if ((node = TLBTreeLookup(&vr4300->tlb.tlbTree,
+    vr4300->cp0.regs.entryHi.asid, vaddr)) == NULL)
+    return false;
+
+  mask = (node->pageMask << 12) | 0xFFF;
+  pageEndAddr = (vaddr & ~mask) + (mask + 1);
+
+  loEntry = (vaddr >= pageEndAddr)
+    ? &node->tlbEntryLo1
+    : &node->tlbEntryLo0;
+
+  *paddr = (loEntry->pfn << 12) | (vaddr & mask);
+  return true;
 }
 

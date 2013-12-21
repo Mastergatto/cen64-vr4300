@@ -15,6 +15,7 @@
 #include "Fault.h"
 #include "Pipeline.h"
 #include "Region.h"
+#include "TLB.h"
 
 #ifdef __cplusplus
 #include <cassert>
@@ -64,6 +65,22 @@ VR4300DCStage(struct VR4300 *vr4300) {
   }
 
   memoryData->address -= region->offset;
+
+  if (region->mapped) {
+    uint32_t paddr;
+
+    debugarg("TLB Data Access: Address: 0x%.16lX.", memoryData->address);
+
+    if (!VR4300Translate(vr4300, memoryData->address, &paddr)) {
+      debugarg("TLB Miss: Address: 0x%.16lX.", memoryData->address);
+      debug("Unimplemented fault: VR4300_TLB_...");
+    }
+
+    else {
+      debugarg("TLB Hit: Address: 0x%.8X.", paddr);
+      memoryData->address = paddr;
+    }
+  }
 
   if (region->cached) {
     if ((line = VR4300DCacheProbe(dcache, memoryData->address)) == NULL) {

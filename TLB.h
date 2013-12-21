@@ -19,6 +19,7 @@ struct VR4300TLB {
 };
 
 void VR4300InitTLB(struct VR4300TLB *);
+bool VR4300Translate(struct VR4300 *vr4300, uint64_t vaddr, uint32_t* paddr);
 
 #endif
 

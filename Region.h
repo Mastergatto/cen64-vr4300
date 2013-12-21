@@ -18,6 +18,7 @@ struct RegionInfo {
   uint64_t start;
   uint64_t length;
   bool cached;
+  bool mapped;
 };
 
 const struct RegionInfo* GetDefaultRegion(void);
