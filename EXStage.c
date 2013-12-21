@@ -454,7 +454,6 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
       case 6:
         debug("Unimplemented ICACHE: Hit_Write_Back.");
-        assert(0);
         break;
     }
   }
@@ -488,7 +487,6 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
     else {
       debugarg("Unimplemented DCACHE: %d.", op);
-      assert(0);
     }
   }
 

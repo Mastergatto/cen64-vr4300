@@ -66,8 +66,19 @@ VR4300TLBP(struct VR4300 *vr4300) {
  *  Instruction: TLBR (Read Indexed TLB Entry)
  * ========================================================================= */
 void
-VR4300TLBR(struct VR4300 *unused(vr4300)) {
-  debug("Unimplemented function: TLBR.");
+VR4300TLBR(struct VR4300 *vr4300) {
+  unsigned idx = vr4300->cp0.regs.index.index;
+  struct VR4300CP0* cp0 = &vr4300->cp0;
+
+  const struct TLBNode* node = vr4300->tlb.tlbTree.entries + idx;
+
+  memcpy(&cp0->regs.entryLo0, &node->tlbEntryLo0, sizeof(node->tlbEntryLo0));
+  memcpy(&cp0->regs.entryLo1, &node->tlbEntryLo1, sizeof(node->tlbEntryLo1));
+  memcpy(&cp0->regs.entryHi,  &node->tlbEntryHi,  sizeof(node->tlbEntryHi));
+  cp0->regs.pageMask = node->pageMask;
+
+  /* Strip the folded region out of VPN2. */
+  cp0->regs.entryHi.vpn2 &= 0x7FFFFFF;
 }
 
 /* ==========================================================================
@@ -103,7 +114,7 @@ VR4300TLBWI(struct VR4300 *vr4300) {
     ? debug("TLB: PPN1 Valid: Yes.")
     : debug("TLB: PPN1 Valid: No.");
 
-  debugarg("TLB: VPN2:  [0x%.16lx].", (uint64_t) entryHi->vpn2);
+  debugarg("TLB: VPN2:  [0x%.8X].", entryHi->vpn2);
 #endif
 
   /* Evict the old entry, setup up the new one, insert it. */
