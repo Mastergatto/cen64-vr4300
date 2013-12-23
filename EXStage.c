@@ -474,32 +474,37 @@ VR4300CACHE(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   else if (cache == 1) {
     idx = (address >> 4) & 0x1FF;
 
-    if (op == 0) {
-      VR4300DCacheFill(dcache, vr4300->bus, paddr);
-      dcache->valid[idx] = false;
-    }
+    switch (op) {
+      case 0: /* Index_Write_Back_Invalidate */
+        if (dcache->valid[idx]) {
+          dcache->lines[idx].dirty = true;
+          VR4300DCacheFill(dcache, vr4300->bus, address, paddr);
+        }
 
-    else if (op == 4) {
-      if (dcache->lines[idx].tag == (paddr >> 4))
         dcache->valid[idx] = false;
-    }
+        break;
 
-    /* This is NOT correct; needs to do it only when dirty. */
-    else if (op == 5 && dcache->valid[idx]) {
-      if (dcache->lines[idx].tag == (paddr >> 4)) {
-        VR4300DCacheFill(dcache, vr4300->bus, paddr);
-        dcache->valid[idx] = false;
-      }
-    }
+      case 4: /* Hit_Invalidate */
+        if (dcache->lines[idx].tag == (paddr >> 4))
+          dcache->valid[idx] = false;
+        break;
 
-    /* This is NOT correct; needs to do it only when dirty. */
-    else if (op == 6 && dcache->valid[idx]) {
-      if (dcache->lines[idx].tag == (paddr >> 4))
-        VR4300DCacheFill(dcache, vr4300->bus, paddr);
-    }
+      case 5: /* Hit_Write_Back_Invalidate */
+        if (dcache->lines[idx].tag == (paddr >> 4)) {
+          VR4300DCacheFill(dcache, vr4300->bus, address, paddr);
+          dcache->valid[idx] = false;
+        }
 
-    else {
-      debugarg("Unimplemented DCACHE: %d.", op);
+        break;
+
+      case 6: /* Hit_Write_Back */
+        if (dcache->lines[idx].tag == (paddr >> 4))
+          VR4300DCacheFill(dcache, vr4300->bus, address, paddr);
+        break;
+
+      default:
+        debugarg("Unimplemented DCACHE: %d.", op);
+        break;
     }
   }
 

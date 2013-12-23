@@ -32,9 +32,9 @@ struct VR4300ICache {
 void VR4300InitICache(struct VR4300ICache *);
 
 void VR4300ICacheFill(struct VR4300ICache *,
-  struct BusController *, uint32_t);
+  struct BusController *, uint64_t, uint32_t);
 const struct VR4300ICacheLineData* VR4300ICacheProbe(
-  const struct VR4300ICache *, uint32_t);
+  const struct VR4300ICache *, uint64_t, uint32_t);
 
 #endif
 

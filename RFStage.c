@@ -63,29 +63,29 @@ void
 VR4300RFStage(struct VR4300 *vr4300) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  uint32_t address = icrfLatch->address;
+  uint64_t address = icrfLatch->address;
+  uint32_t paddr = address;
 
   /* Is the region mapped? */
   if (icrfLatch->region->mapped) {
     uint32_t paddr;
 
-    debugarg("TLB Code Access: Address: 0x%.8X.", address);
+    debugarg("TLB Code Access: Address: 0x%.16lX.", address);
 
     if (!VR4300Translate(vr4300, address, &paddr)) {
-      debugarg("TLB Miss: Address: 0x%.8X.", address);
+      debugarg("TLB Miss: Address: 0x%.16lX.", address);
       debug("Unimplemented fault: VR4300_TLB_...");
     }
 
     else {
       debugarg("TLB Hit: Address: 0x%.8X.", paddr);
-      address = paddr;
     }
   }
 
   /* Is the region cache-able? */
   if (likely(icrfLatch->region->cached)) {
     const struct VR4300ICacheLineData *cacheData;
-    cacheData = VR4300ICacheProbe(&vr4300->icache, address);
+    cacheData = VR4300ICacheProbe(&vr4300->icache, address, paddr);
 
     /* Do we need to fill the line? */
     if (unlikely(cacheData == NULL)) {

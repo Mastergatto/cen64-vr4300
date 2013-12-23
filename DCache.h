@@ -17,6 +17,7 @@
 struct VR4300DCacheLine {
   uint8_t data[16];
   uint32_t tag;
+  bool dirty;
 };
 
 struct VR4300DCache {
@@ -26,10 +27,10 @@ struct VR4300DCache {
 
 void VR4300InitDCache(struct VR4300DCache *dcache);
 void VR4300DCacheFill(struct VR4300DCache *dcache,
-  struct BusController *bus, uint32_t paddr);
+  struct BusController *bus, uint64_t vaddr, uint32_t paddr);
 
 struct VR4300DCacheLine* VR4300DCacheProbe(
-  struct VR4300DCache *dcache, uint32_t paddr);
+  struct VR4300DCache *dcache, uint64_t vaddr, uint32_t paddr);
 
 #endif
 

@@ -39,6 +39,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
 
   struct VR4300DCacheLine *line = NULL;
   const struct RegionInfo *region;
+  uint64_t vaddr;
 
   VR4300MemoryFunction function = memoryData->function;
 
@@ -64,6 +65,7 @@ VR4300DCStage(struct VR4300 *vr4300) {
     dcwbLatch->region = region;
   }
 
+  vaddr = memoryData->address;
   memoryData->address -= region->offset;
 
   if (region->mapped) {
@@ -83,9 +85,10 @@ VR4300DCStage(struct VR4300 *vr4300) {
   }
 
   if (region->cached) {
-    if ((line = VR4300DCacheProbe(dcache, memoryData->address)) == NULL) {
-      VR4300DCacheFill(dcache, vr4300->bus, memoryData->address);
-      line = VR4300DCacheProbe(dcache, memoryData->address);
+    if ((line = VR4300DCacheProbe(
+      dcache, vaddr, memoryData->address)) == NULL) {
+      VR4300DCacheFill(dcache, vr4300->bus, vaddr, memoryData->address);
+      line = VR4300DCacheProbe(dcache, vaddr, memoryData->address);
     }
   }
 
@@ -523,8 +526,10 @@ VR4300StoreByte(const struct VR4300MemoryData *memoryData,
   MemoryFunction write;
   void *opaque;
 
-  if (line != NULL)
+  if (line != NULL) {
     memcpy(line->data + (address & 0xF), &contents, sizeof(contents));
+    line->dirty = true;
+  }
 
   else {
     if ((write = BusWrite(bus, BUS_TYPE_BYTE, address, &opaque)) == NULL)
@@ -548,6 +553,7 @@ VR4300StoreDWord(const struct VR4300MemoryData *memoryData,
   if (line != NULL) {
     contents = ByteOrderSwap64(contents);
     memcpy(line->data + (address & 0x8), &contents, sizeof(contents));
+    line->dirty = true;
   }
 
   else {
@@ -576,8 +582,10 @@ VR4300StoreDWordLeft(const struct VR4300MemoryData *memoryData,
   data.size = 8 - (memoryData->address & 0x7);
   memcpy(data.data, &contents, sizeof(contents));
 
-  if (line != NULL)
+  if (line != NULL) {
     memcpy(line->data + (address & 0xF), data.data, data.size);
+    line->dirty = true;
+  }
 
   else {
     if ((write = BusWrite(bus, BUS_TYPE_UDWORD, address, &opaque)) == NULL)
@@ -606,8 +614,10 @@ VR4300StoreDWordRight(const struct VR4300MemoryData *memoryData,
   contents = ByteOrderSwap64(contents);
   memcpy(data.data, &contents, sizeof(contents));
 
-  if (line != NULL)
+  if (line != NULL) {
     memcpy(line->data + (address & 0xF), data.data, data.size);
+    line->dirty = true;
+  }
 
   else {
     if ((write = BusWrite(bus, BUS_TYPE_UDWORD, address, &opaque)) == NULL)
@@ -631,6 +641,7 @@ VR4300StoreHWord(const struct VR4300MemoryData *memoryData,
   if (line != NULL) {
     contents = ByteOrderSwap16(contents);
     memcpy(line->data + (address & 0xE), &contents, sizeof(contents));
+    line->dirty = true;
   }
 
   else {
@@ -655,6 +666,7 @@ VR4300StoreWord(const struct VR4300MemoryData *memoryData,
   if (line != NULL) {
     contents = ByteOrderSwap32(contents);
     memcpy(line->data + (address & 0xC), &contents, sizeof(contents));
+    line->dirty = true;
   }
 
   else {
@@ -683,8 +695,10 @@ VR4300StoreWordLeft(const struct VR4300MemoryData *memoryData,
   data.size = 4 - (memoryData->address & 0x3);
   memcpy(data.data, &contents, sizeof(contents));
 
-  if (line != NULL)
+  if (line != NULL) {
     memcpy(line->data + (address & 0xF), data.data, data.size);
+    line->dirty = true;
+  }
 
   else {
     if ((write = BusWrite(bus, BUS_TYPE_UWORD, address, &opaque)) == NULL)
@@ -713,8 +727,10 @@ VR4300StoreWordRight(const struct VR4300MemoryData *memoryData,
   contents = ByteOrderSwap32(contents);
   memcpy(data.data, &contents, sizeof(contents));
 
-  if (line != NULL)
+  if (line != NULL) {
     memcpy(line->data + (address & 0xF), data.data, data.size);
+    line->dirty = true;
+  }
 
   else {
     if ((write = BusWrite(bus, BUS_TYPE_UWORD, address, &opaque)) == NULL)

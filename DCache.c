@@ -24,16 +24,16 @@
  *  Returns the data cache line and sets the tags.
  * ========================================================================= */
 void VR4300DCacheFill(struct VR4300DCache *dcache,
-  struct BusController *bus, uint32_t paddr) {
-  unsigned lineIdx = paddr >> 4 & 0x1FF;
+  struct BusController *bus, uint64_t vaddr, uint32_t paddr) {
+  unsigned lineIdx = vaddr >> 4 & 0x1FF;
   unsigned ppo = paddr >> 4;
   unsigned i;
 
   struct VR4300DCacheLine *line = dcache->lines + lineIdx;
   paddr &= 0xFFFFFFF0;
 
-  /* If the line is currently valid, flush it out. */
-  if (dcache->valid[lineIdx]) {
+  /* If the line is currently valid (and dirty), flush it out. */
+  if (dcache->valid[lineIdx] && line->dirty) {
     MemoryFunction write;
     uint32_t wraddr;
     void *opaque;
@@ -52,6 +52,7 @@ void VR4300DCacheFill(struct VR4300DCache *dcache,
 
   /* Mark the line as valid. */
   dcache->valid[lineIdx] = true;
+  line->dirty = false;
   line->tag = ppo;
 
   /* And fill it entirely. */
@@ -65,9 +66,9 @@ void VR4300DCacheFill(struct VR4300DCache *dcache,
  *  Probes the data cache using an address.
  * ========================================================================= */
 struct VR4300DCacheLine* VR4300DCacheProbe(
-  struct VR4300DCache *dcache, uint32_t paddr) {
+  struct VR4300DCache *dcache, uint64_t vaddr, uint32_t paddr) {
   struct VR4300DCacheLine *line;
-  unsigned lineIdx = paddr >> 4 & 0x1FF;
+  unsigned lineIdx = vaddr >> 4 & 0x1FF;
   unsigned ppo = paddr >> 4;
 
   /* Virtually indexed, physically tagged. */

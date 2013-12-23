@@ -25,9 +25,9 @@
  *  Fills an instruction cache line, sets the tags, etc.
  * ========================================================================= */
 void VR4300ICacheFill(struct VR4300ICache *icache,
-  struct BusController *bus, uint32_t paddr) {
+  struct BusController *bus, uint64_t vaddr, uint32_t paddr) {
   struct VR4300ICacheLineData *data;
-  unsigned lineIdx = paddr >> 5 & 0x1FF;
+  unsigned lineIdx = vaddr >> 5 & 0x1FF;
   unsigned tag = paddr >> 12;
   unsigned i;
 
@@ -49,9 +49,9 @@ void VR4300ICacheFill(struct VR4300ICache *icache,
  *  Probes the instruction cache using an address and tag.
  * ========================================================================= */
 const struct VR4300ICacheLineData* VR4300ICacheProbe(
-  const struct VR4300ICache *icache, uint32_t paddr) {
+  const struct VR4300ICache *icache, uint64_t vaddr, uint32_t paddr) {
   const struct VR4300ICacheLineData *cacheData;
-  unsigned lineIdx = paddr >> 5 & 0x1FF;
+  unsigned lineIdx = vaddr >> 5 & 0x1FF;
   unsigned offset = paddr >> 2 & 0x7;
   unsigned tag = paddr >> 12;
 
