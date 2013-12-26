@@ -142,6 +142,28 @@ VR4300MFC0(struct VR4300 *vr4300, uint64_t unused(rs), uint64_t unused(rt)) {
       (uint32_t) vr4300->cp0.regs.index.probe << 31;
     break;
 
+  case VR4300_CP0_REGISTER_ENTRYLO0:
+    result =
+      (uint32_t) vr4300->cp0.regs.entryLo0.global |
+      (uint32_t) vr4300->cp0.regs.entryLo0.valid << 1 |
+      (uint32_t) vr4300->cp0.regs.entryLo0.dirty << 2 |
+      (uint32_t) vr4300->cp0.regs.entryLo0.attribute << 3 |
+      (uint32_t) vr4300->cp0.regs.entryLo0.pfn << 6;
+    break;
+
+  case VR4300_CP0_REGISTER_ENTRYLO1:
+    result =
+      (uint32_t) vr4300->cp0.regs.entryLo1.global |
+      (uint32_t) vr4300->cp0.regs.entryLo1.valid << 1 |
+      (uint32_t) vr4300->cp0.regs.entryLo1.dirty << 2 |
+      (uint32_t) vr4300->cp0.regs.entryLo1.attribute << 3 |
+      (uint32_t) vr4300->cp0.regs.entryLo1.pfn << 6;
+    break;
+
+  case VR4300_CP0_REGISTER_PAGEMASK:
+    result = vr4300->cp0.regs.pageMask << 13;
+    break;
+
   case VR4300_CP0_REGISTER_COUNT:
     result = vr4300->cp0.regs.count;
     break;
