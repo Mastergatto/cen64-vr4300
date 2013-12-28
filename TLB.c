@@ -197,7 +197,7 @@ VR4300Translate(struct VR4300 *vr4300, uint64_t vaddr, uint32_t* paddr) {
     return false;
 
   mask = (node->pageMask << 12) | 0xFFF;
-  pageEndAddr = (vaddr & ~mask) + (mask + 1);
+  pageEndAddr = (node->tlbEntryHi.vpn2 << 13) + (mask +1);
 
   loEntry = (vaddr >= pageEndAddr)
     ? &node->tlbEntryLo1
