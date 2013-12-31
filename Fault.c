@@ -278,8 +278,10 @@ VR4300FaultIBE(struct VR4300 *unused(vr4300)) {
  * ========================================================================= */
 void
 VR4300FaultICB(struct VR4300 *vr4300) {
-  uint32_t address = vr4300->pipeline.faultManager.ilData; /* TODO: vaddr */
-  VR4300ICacheFill(&vr4300->icache, vr4300->bus, address, address);
+  uint64_t vaddr = vr4300->pipeline.faultManager.savedIcrfLatch.address;
+  uint32_t paddr = vr4300->pipeline.faultManager.ilData;
+
+  VR4300ICacheFill(&vr4300->icache, vr4300->bus, vaddr, paddr);
 
   /* Restore latch contents that may have been lost. */
   memcpy(&vr4300->pipeline.icrfLatch, &vr4300->pipeline.faultManager.

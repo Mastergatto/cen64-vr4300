@@ -63,29 +63,28 @@ void
 VR4300RFStage(struct VR4300 *vr4300) {
   struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
   struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  uint64_t address = icrfLatch->address;
-  uint32_t paddr = address;
+  uint64_t vaddr = icrfLatch->address;
+  uint32_t paddr = vaddr;
 
   /* Is the region mapped? */
   if (icrfLatch->region->mapped) {
-    uint32_t paddr;
+    debugarg("TLB Code Access: Address: 0x%.8X.", address);
 
-    debugarg("TLB Code Access: Address: 0x%.16lX.", address);
-
-    if (!VR4300Translate(vr4300, address, &paddr)) {
-      debugarg("TLB Miss: Address: 0x%.16lX.", address);
+    if (!VR4300Translate(vr4300, vaddr, &paddr)) {
+      debugarg("TLB Miss: Address: 0x%.8X.", address);
       debug("Unimplemented fault: VR4300_TLB_...");
     }
 
     else {
       debugarg("TLB Hit: Address: 0x%.8X.", paddr);
+      //address = paddr;
     }
   }
 
   /* Is the region cache-able? */
   if (likely(icrfLatch->region->cached)) {
     const struct VR4300ICacheLineData *cacheData;
-    cacheData = VR4300ICacheProbe(&vr4300->icache, address, paddr);
+    cacheData = VR4300ICacheProbe(&vr4300->icache, vaddr, paddr);
 
     /* Do we need to fill the line? */
     if (unlikely(cacheData == NULL)) {
@@ -93,7 +92,7 @@ VR4300RFStage(struct VR4300 *vr4300) {
         icrfLatch, sizeof(*icrfLatch));
 
       QueueInterlock(&vr4300->pipeline, VR4300_FAULT_ICB,
-        address, VR4300_PCU_RESUME_RF);
+        paddr, VR4300_PCU_RESUME_RF);
 
       /* TODO: XXX: Might want to still invalidate the RF/EX latch */
       /*            outputs here. Shouldn't cause an issue though... */
@@ -106,7 +105,7 @@ VR4300RFStage(struct VR4300 *vr4300) {
   /* Region isn't cachable; fetch a word from memory. */
   /* Manually force instruction to invalid if iwMask == 0. */
   else {
-    uint32_t iw = BusReadWord(vr4300->bus, address) & icrfLatch->iwMask;
+    uint32_t iw = BusReadWord(vr4300->bus, paddr) & icrfLatch->iwMask;
 
     rfexLatch->opcode = *VR4300DecodeInstruction(iw);
     rfexLatch->opcode.id &= icrfLatch->iwMask;
