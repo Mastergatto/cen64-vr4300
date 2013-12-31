@@ -36,9 +36,7 @@ VR4300ICStage(struct VR4300 *vr4300) {
       return;
     }
 
-    icrfLatch->address = pc - region->offset;
     icrfLatch->region = region;
-    return;
   }
 
   icrfLatch->address = pc - region->offset;
