@@ -38,9 +38,11 @@ static const uint32_t vr4300_branch_lut[2] = {
 
 //
 // ADD
+// ADDU
 // SUB
+// SUBU
 //
-void VR4300ADD_SUB(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+void VR4300ADD_ADDU_SUB_SUBU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
   struct VR4300EXDCLatch *exdc_latch = &vr4300->pipeline.exdcLatch;
 
@@ -83,28 +85,6 @@ void VR4300ADDI_SUBI_ADDIU_SUBIU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt
   assert(((rt >> 31) == (rt >> 32)) && "Overflow exception.");
 
   exdc_latch->result.data = (int32_t) rt;
-  exdc_latch->result.dest = dest;
-}
-
-//
-// ADDU
-// SUBU
-//
-void VR4300ADDU_SUBU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdc_latch = &vr4300->pipeline.exdcLatch;
-
-  uint32_t iw = rfex_latch->iw;
-  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
-
-  unsigned dest;
-  uint64_t rd;
-
-  dest = GET_RD(iw);
-  rt = (rt ^ mask) - mask;
-  rd = rs + rt;
-
-  exdc_latch->result.data = (int32_t) rd;
   exdc_latch->result.dest = dest;
 }
 
