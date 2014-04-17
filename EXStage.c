@@ -169,7 +169,7 @@ void VR4300BEQ_BEQL_BNE_BNEL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   }
 
 #ifdef DO_FASTFORWARD
-  if (offset == 0xFFFFFFFFFFFFFFFCULL && !rs)
+  if (offset == 0xFFFFFFFFFFFFFFFCULL && !rs && !(iw >> 30 & 0x1))
     if (vr4300->pipeline.faultManager.excpIndex == VR4300_PCU_NORMAL) {
       vr4300->pipeline.faultManager.excpIndex = VR4300_PCU_FASTFORWARD;
       vr4300->pipeline.faultManager.faulting = 1;
