@@ -26,68 +26,86 @@
 #include <string.h>
 #endif
 
-/* ============================================================================
- *  Instruction: ADD (Add)
- *  TODO: Integer overflow exception.
- * ========================================================================= */
-void
-VR4300ADD(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+// Mask to negate second operand if subtract operation.
+static const uint64_t vr4300_addsub_lut[2] = {
+  0x0ULL, ~0x0ULL
+};
 
-  unsigned dest = GET_RD(rfexLatch->iw);
-  int64_t result = (int32_t) (rs + rt);
+// Mask to kill the instruction word if "likely" branch.
+static const uint32_t vr4300_branch_lut[2] = {
+  ~0U, 0U
+};
 
-  exdcLatch->result.data = result;
-  exdcLatch->result.dest = dest;
+//
+// ADD
+// SUB
+//
+void VR4300ADD_SUB(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdc_latch = &vr4300->pipeline.exdcLatch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
+
+  unsigned dest;
+  uint64_t rd;
+
+  dest = GET_RD(iw);
+  rt = (rt ^ mask) - mask;
+  rd = rs + rt;
+
+  assert(((rd >> 31) == (rd >> 32)) && "Overflow exception.");
+
+  exdc_latch->result.data = (int32_t) rd;
+  exdc_latch->result.dest = dest;
 }
 
-/* ============================================================================
- *  Instruction: ADDI (Add Immediate)
- *  TODO: Integer overflow exception.
- * ========================================================================= */
-void
-VR4300ADDI(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+//
+// ADDI
+// ADDIU
+// SUBI
+// SUBIU
+//
+void VR4300ADDI_SUBI_ADDIU_SUBIU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdc_latch = &vr4300->pipeline.exdcLatch;
 
-  unsigned dest = GET_RT(rfexLatch->iw);
-  int64_t imm = (int16_t) rfexLatch->iw;
-  int64_t result = (int32_t) (rs + imm);
+  uint32_t iw = rfex_latch->iw;
+  uint64_t mask = 0; //vr4300_addsub_lut[iw >> 1 & 0x1];
 
-  exdcLatch->result.data = result;
-  exdcLatch->result.dest = dest;
+  unsigned dest;
+
+  dest = GET_RT(iw);
+  rt = (int16_t) iw;
+  rt = (rt ^ mask) - mask;
+  rt = rs + rt;
+
+  assert(((rt >> 31) == (rt >> 32)) && "Overflow exception.");
+
+  exdc_latch->result.data = (int32_t) rt;
+  exdc_latch->result.dest = dest;
 }
 
-/* ============================================================================
- *  Instruction: ADDIU (Add Immediate Unsigned)
- * ========================================================================= */
-void
-VR4300ADDIU(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+//
+// ADDU
+// SUBU
+//
+void VR4300ADDU_SUBU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdc_latch = &vr4300->pipeline.exdcLatch;
 
-  unsigned dest = GET_RT(rfexLatch->iw);
-  int64_t imm = (int16_t) rfexLatch->iw;
-  int64_t result = (int32_t) (rs + imm);
+  uint32_t iw = rfex_latch->iw;
+  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
 
-  exdcLatch->result.data = result;
-  exdcLatch->result.dest = dest;
-}
+  unsigned dest;
+  uint64_t rd;
 
-/* ============================================================================
- *  Instruction: ADDU (Add Unsigned)
- * ========================================================================= */
-void
-VR4300ADDU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
+  dest = GET_RD(iw);
+  rt = (rt ^ mask) - mask;
+  rd = rs + rt;
 
-  unsigned dest = GET_RD(rfexLatch->iw);
-  int64_t result = (int32_t) (rs + rt);
-
-  exdcLatch->result.data = result;
-  exdcLatch->result.dest = dest;
+  exdc_latch->result.data = (int32_t) rd;
+  exdc_latch->result.dest = dest;
 }
 
 /* ============================================================================
@@ -128,260 +146,119 @@ VR4300BC2(struct VR4300 *unused(vr4300),
   debug("Unimplemented function: BC2.");
 }
 
-/* ============================================================================
- *  Instruction: BEQ (Branch On Equal)
- * ========================================================================= */
-void
-VR4300BEQ(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  uint64_t address = (int64_t) ((int16_t) rfexLatch->iw << 2);
+//
+// BEQ
+// BEQL
+// BNE
+// BNEL
+//
+void VR4300BEQ_BEQL_BNE_BNEL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct VR4300ICRFLatch *icrf_latch = &vr4300->pipeline.icrfLatch;
+  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
 
-  if (rs != rt)
+  uint32_t iw = rfex_latch->iw;
+  uint32_t mask = vr4300_branch_lut[iw >> 30 & 0x1];
+  uint64_t offset = (int16_t) iw << 2;
+
+  bool is_ne = iw >> 26 & 0x1;
+  bool cmp = rs == rt;
+
+  if (cmp == is_ne) {
+    icrf_latch->iwMask = mask;
     return;
+  }
 
 #ifdef DO_FASTFORWARD
-  if (address == 0xFFFFFFFFFFFFFFFCULL && !rs)
+  if (offset == 0xFFFFFFFFFFFFFFFCULL && !rs)
     if (vr4300->pipeline.faultManager.excpIndex == VR4300_PCU_NORMAL) {
       vr4300->pipeline.faultManager.excpIndex = VR4300_PCU_FASTFORWARD;
       vr4300->pipeline.faultManager.faulting = 1;
     }
 #endif
 
-  icrfLatch->pc += address - 4;
+  icrf_latch->pc += offset - 4;
 }
 
-/* ============================================================================
- *  Instruction: BEQL (Branch On Equal Likely)
- * ========================================================================= */
-void
-VR4300BEQL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
+//
+// BGEZ
+// BGEZL
+// BLTZ
+// BLTZL
+//
+void VR4300BGEZ_BGEZL_BLTZ_BLTZL(
+  struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct VR4300ICRFLatch *icrf_latch = &vr4300->pipeline.icrfLatch;
+  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
 
-  if (rs != rt) {
-    icrfLatch->iwMask = 0;
+  uint32_t iw = rfex_latch->iw;
+  uint32_t mask = vr4300_branch_lut[iw >> 17 & 0x1];
+  uint64_t offset = (int16_t) iw << 2;
+
+  bool is_ge = iw >> 16 & 0x1;
+  bool cmp = (int64_t) rs < 0;
+
+  if (cmp == is_ge) {
+    icrf_latch->iwMask = mask;
     return;
   }
 
-  icrfLatch->pc += address - 4;
+  icrf_latch->pc += offset - 4;
 }
 
-/* ============================================================================
- *  Instruction: BGEZ (Branch On Greater Than Or Equal To Zero)
- * ========================================================================= */
-void
-VR4300BGEZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
+//
+// BGEZAL
+// BGEZALL
+// BLTZAL
+// BLTZALL
+//
+void VR4300BGEZAL_BGEZALL_BLTZAL_BLTZALL(
+  struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct VR4300ICRFLatch *icrf_latch = &vr4300->pipeline.icrfLatch;
+  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
+  struct VR4300EXDCLatch *exdc_latch = &vr4300->pipeline.exdcLatch;
 
-  if ((int64_t) rs < 0)
-    return;
+  uint32_t iw = rfex_latch->iw;
+  uint32_t mask = vr4300_branch_lut[iw >> 17 & 0x1];
+  uint64_t offset = (int16_t) iw << 2;
 
-  icrfLatch->pc += address - 4;
-}
+  bool is_ge = iw >> 16 & 0x1;
+  bool cmp = (int64_t) rs < 0;
 
-/* ============================================================================
- *  Instruction: BGEZAL (Branch On Greater Than Or Equal To Zero And Link)
- * ========================================================================= */
-void
-VR4300BGEZAL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
+  exdc_latch->result.dest = VR4300_REGISTER_RA;
+  exdc_latch->result.data = icrf_latch->pc + 4;
 
-  exdcLatch->result.data = icrfLatch->pc + 4;
-  exdcLatch->result.dest = VR4300_REGISTER_RA;
-
-  if ((int64_t) rs < 0)
-    return;
-
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BGEZALL (Branch On Greater Than Or Equal TO Zero And Link L.)
- * ========================================================================= */
-void
-VR4300BGEZALL(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: BGEZALL.");
-}
-
-/* ============================================================================
- *  Instruction: BGEZL (Branch On Greater Than Or Equal To Zero Likely)
- * ========================================================================= */
-void
-VR4300BGEZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if ((int64_t) rs < 0) {
-    icrfLatch->iwMask = 0;
+  if (cmp == is_ge) {
+    icrf_latch->iwMask = mask;
     return;
   }
 
-  icrfLatch->pc += address - 4;
+  icrf_latch->pc += (offset - 4);
 }
 
-/* ============================================================================
- *  Instruction: BGTZ (Branch On Greater Than Zero)
- * ========================================================================= */
-void
-VR4300BGTZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
+//
+// BGTZ
+// BGTZL
+// BLEZ
+// BLEZL
+//
+void VR4300BGTZ_BGTZL_BLEZ_BLEZL(
+  struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct VR4300ICRFLatch *icrf_latch = &vr4300->pipeline.icrfLatch;
+  struct VR4300RFEXLatch *rfex_latch = &vr4300->pipeline.rfexLatch;
 
-  if ((int64_t) rs <= 0)
-    return;
+  uint32_t iw = rfex_latch->iw;
+  uint32_t mask = vr4300_branch_lut[iw >> 30 & 0x1];
+  uint64_t offset = (int16_t) iw << 2;
 
-  icrfLatch->pc += address - 4;
-}
+  bool is_gt = iw >> 26 & 0x1;
+  bool cmp = (int64_t) rs <= 0;
 
-/* ============================================================================
- *  Instruction: BGTZL (Branch On Greater Than Zero Likely)
- * ========================================================================= */
-void
-VR4300BGTZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if ((int64_t) rs <= 0) {
-    icrfLatch->iwMask = 0;
+  if (cmp == is_gt) {
+    icrf_latch->iwMask = mask;
     return;
   }
 
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BLEZ (Branch On Less Than Or Equal To Zero)
- * ========================================================================= */
-void
-VR4300BLEZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if ((int64_t) rs > 0)
-    return;
-
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BLEZL (Branch On Less Than Or Equal To Zero Likely)
- * ========================================================================= */
-void
-VR4300BLEZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if ((int64_t) rs > 0) {
-    icrfLatch->iwMask = 0;
-    return;
-  }
-
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BLTZ (Branch On Less Than Zero)
- * ========================================================================= */
-void
-VR4300BLTZ(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if ((int64_t) rs >= 0)
-    return;
-
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BLTZAL (Branch On Less Than Zero And Link)
- * ========================================================================= */
-void
-VR4300BLTZAL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  exdcLatch->result.data = icrfLatch->pc + 4;
-  exdcLatch->result.dest = VR4300_REGISTER_RA;
-
-  if ((int64_t) rs >= 0)
-    return;
-
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BLTZALL (Branch On Less Than Zero And Link Likely)
- * ========================================================================= */
-void
-VR4300BLTZALL(struct VR4300 *unused(vr4300),
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  debug("Unimplemented function: BLTZALL.");
-}
-
-/* ============================================================================
- *  Instruction: BLTZL (Branch On Less Than Zero Likely)
- * ========================================================================= */
-void
-VR4300BLTZL(struct VR4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if ((int64_t) rs >= 0) {
-    icrfLatch->iwMask = 0;
-    return;
-  }
-
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BNE (Branch On Not Equal)
- * ========================================================================= */
-void
-VR4300BNE(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if (rs == rt)
-    return;
-
-  icrfLatch->pc += address - 4;
-}
-
-/* ============================================================================
- *  Instruction: BNEL (Branch On Not Equal Likely)
- * ========================================================================= */
-void
-VR4300BNEL(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct VR4300ICRFLatch *icrfLatch = &vr4300->pipeline.icrfLatch;
-  struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  int64_t address = (int16_t) rfexLatch->iw << 2;
-
-  if (rs == rt) {
-    icrfLatch->iwMask = 0;
-    return;
-  }
-
-  icrfLatch->pc += address - 4;
+  icrf_latch->pc += (offset - 4);
 }
 
 /* ============================================================================
@@ -1708,37 +1585,6 @@ VR4300SRLV(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
   int32_t result = (uint32_t) rt >> sa;
 
   exdcLatch->result.data = (int64_t) result;
-  exdcLatch->result.dest = dest;
-}
-
-/* ============================================================================
- *  Instruction: SUB (Subtract)
- *  TODO: Integer overflow exception.
- * ========================================================================= */
-void
-VR4300SUB(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
-  unsigned dest = GET_RD(rfexLatch->iw);
-  int64_t result = (int32_t) (rs - rt);
-
-  exdcLatch->result.data = result;
-  exdcLatch->result.dest = dest;
-}
-
-/* ============================================================================
- *  Instruction: SUBU (Subtract Unsigned)
- * ========================================================================= */
-void
-VR4300SUBU(struct VR4300 *vr4300, uint64_t rs, uint64_t rt) {
-  const struct VR4300RFEXLatch *rfexLatch = &vr4300->pipeline.rfexLatch;
-  struct VR4300EXDCLatch *exdcLatch = &vr4300->pipeline.exdcLatch;
-
-  unsigned dest = GET_RD(rfexLatch->iw);
-  int64_t result = (int32_t) (rs - rt);
-
-  exdcLatch->result.data = result;
   exdcLatch->result.dest = dest;
 }
 
